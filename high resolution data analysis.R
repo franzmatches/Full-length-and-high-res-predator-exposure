@@ -2,7 +2,7 @@
 ######### high resolution experiment data analysis#########
 ###########################################################
 rm(list=ls())
-ll
+
 #load packages
 library(dplyr)
 library(tidyverse)
@@ -34,10 +34,10 @@ mean_data <- rbind(did_mean_data, hom_mean_data, prey_mean_data) %>%
                                 TRUE ~ paste(time_point + 50))) %>%
   mutate(time_point = as.numeric(time_point))
 
-
+mean_data_no_zero<-mean_data %>% filter(time_point != 0)
 #visualise the raw data
 speed_plot_raw <-
-  ggplot(mean_data, aes(x = time_point, y = average_mean_speed, col = as.factor(predator_treatment)))+
+  ggplot(mean_data_no_zero, aes(x = time_point, y = average_mean_speed, col = as.factor(predator_treatment)))+
   geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
@@ -52,7 +52,7 @@ speed_plot_raw <-
         panel.border = element_rect(fill = NA, colour = "black"))
 
 width_plot_raw <-
-  ggplot(mean_data, aes(x = time_point, y = average_mean_width, col = as.factor(predator_treatment)))+
+  ggplot(mean_data_no_zero, aes(x = time_point, y = average_mean_width, col = as.factor(predator_treatment)))+
   geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
@@ -67,7 +67,7 @@ width_plot_raw <-
         panel.border = element_rect(fill = NA, colour = "black"))
 
 length_plot_raw <-
-  ggplot(mean_data, aes(x = time_point, y = max_length, col = as.factor(predator_treatment)))+
+  ggplot(mean_data_no_zero, aes(x = time_point, y = max_length, col = as.factor(predator_treatment)))+
   geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
@@ -82,7 +82,7 @@ length_plot_raw <-
         panel.border = element_rect(fill = NA, colour = "black"))
 
 roundness_plot_raw <- 
-  ggplot(mean_data, aes(x = time_point, y = average_roundness, col = as.factor(predator_treatment)))+
+  ggplot(mean_data_no_zero, aes(x = time_point, y = average_roundness, col = as.factor(predator_treatment)))+
   geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
