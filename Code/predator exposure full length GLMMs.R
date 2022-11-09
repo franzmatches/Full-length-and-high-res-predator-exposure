@@ -4,7 +4,6 @@
 rm(list=ls())
 
 #load packages
-library(dplyr)
 library(tidyverse)
 library(bestNormalize) #transforming response variables to fit gaussian model
 library(MuMIn) #model comparison and simplification
@@ -41,7 +40,7 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 #plot raw data
 speed_id_plot <-
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
-  #  geom_point(alpha = 0.2) +
+  geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
   xlab("Time (hours)")+
