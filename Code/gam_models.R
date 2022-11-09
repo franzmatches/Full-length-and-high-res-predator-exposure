@@ -23,6 +23,7 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
          treat_inter = as.factor(interaction(treatment,predator_treatment)))
 
 speed_id_plot <-
+  
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
   #geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
@@ -51,9 +52,9 @@ plot.gam(gam1,pages = 3,all.terms = T)
 
 
 gam1_rawdata <- gam(mean_speed ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
-              s(time_point,by = predator_treatment) + 
-              s(time_point,by = treat_inter) ,
-            data = id_data, family = "gaussian")
+              s(time_point,by = predator_treatment)
+              + s(time_point,by = treat_inter)
+              ,data = id_data, family = "gaussian")
 summary(gam1_rawdata)
 
 gam.check(gam1_rawdata)
@@ -66,9 +67,9 @@ tt <- cbind(id_data,
 
 ggplot(tt, aes(x = time_point, y = mean_speed))+
   # geom_smooth(se = FALSE) +
-  geom_line(aes(y=fit)) +
+  # geom_line(aes(y=fit)) +
   geom_ribbon(aes(ymin = fit - 1.96*se, ymax =  fit + 1.96*se,fill=as.factor(predator_treatment)))+
-  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  facet_grid(~treatment, scales = "fixed")+
   xlab("Time (hours)")+
   ylab("Mean speed")+
   labs(colour = "Predator treatment") +
