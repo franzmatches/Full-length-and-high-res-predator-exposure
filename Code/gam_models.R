@@ -55,6 +55,7 @@ gam1_rawdata <- gam(mean_speed ~ s(time_point) + treatment:predator_treatment + 
               s(time_point,by = treat_inter) ,
             data = id_data, family = "gaussian")
 summary(gam1_rawdata)
+
 gam.check(gam1_rawdata)
 plot.gam(gam1_rawdata,pages = 3,all.terms = T)
 
