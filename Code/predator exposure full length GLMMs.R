@@ -40,7 +40,6 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 #plot raw data
 speed_id_plot <-
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
-  geom_point(alpha = 0.2) +
   geom_smooth(se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
   xlab("Time (hours)")+
@@ -89,6 +88,7 @@ MuMIn::model.sel(speed_mod_gaussian, speed_mod_gaussian_spline, speed_mod_gaussi
 
 #normalise data using bestNormalize and run on cubic spline model
 id_data$mean_speed_norm <- predict(bestNormalize(id_data$mean_speed))
+
 
 speed_norm_mod_gaussian_cbspline <- glm(mean_speed_norm ~ splines::ns(time_point,3) + treatment + predator_treatment +
                                              splines::ns(time_point,3):treatment + splines::ns(time_point,3):predator_treatment + treatment:predator_treatment +
