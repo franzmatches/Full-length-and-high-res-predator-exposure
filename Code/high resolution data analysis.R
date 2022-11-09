@@ -11,9 +11,9 @@ library(MuMIn)
 library(rstatix)
 
 #load in the treatment x replicate level data
-did_mean_data <- read.csv("did_data_means.csv")
-hom_mean_data <- read.csv("hom_data_means.csv")
-prey_mean_data <- read.csv("prey_data_means.csv")
+did_mean_data <- read.csv("Data/did_data_means.csv")
+hom_mean_data <- read.csv("Data/hom_data_means.csv")
+prey_mean_data <- read.csv("Data/prey_data_means.csv")
 
 #add predator treatment column to each then combine data frames
 did_mean_data <- did_mean_data %>%
