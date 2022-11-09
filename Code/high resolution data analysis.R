@@ -36,6 +36,9 @@ mean_data <- rbind(did_mean_data, hom_mean_data, prey_mean_data) %>%
                                 TRUE ~ paste(time_point + 50))) %>%
   mutate(time_point = as.numeric(time_point))
 
+
+#create dataset without time_point zero
+
 mean_data_no_zero<-mean_data %>% filter(time_point != 0)
 #visualise the raw data
 speed_plot_raw <-
