@@ -49,12 +49,22 @@ gam.check(gam1)
 plot.gam(gam1,pages = 3,all.terms = T)
 
 
+
+gam1_rawdata <- gam(mean_speed ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
+              s(time_point,by = predator_treatment) + 
+              s(time_point,by = treat_inter) ,
+            data = id_data, family = "gaussian")
+summary(gam1_rawdata)
+gam.check(gam1_rawdata)
+plot.gam(gam1_rawdata,pages = 3,all.terms = T)
+
+
 tt <- cbind(id_data,
-            fit = predict(gam1,type="response",se.fit=T)$fit,
-            se = predict(gam1,type="response",se.fit=T)$se.fit)
+            fit = predict(gam1_rawdata,type="response",se.fit=T)$fit,
+            se = predict(gam1_rawdata,type="response",se.fit=T)$se.fit)
 
 ggplot(tt, aes(x = time_point, y = mean_speed))+
-  geom_smooth(se = FALSE) +
+  # geom_smooth(se = FALSE) +
   geom_line(aes(y=fit)) +
   geom_ribbon(aes(ymin = fit - 1.96*se, ymax =  fit + 1.96*se,fill=as.factor(predator_treatment)))+
   facet_grid(treatment~predator_treatment, scales = "fixed")+
@@ -79,10 +89,11 @@ id_data$predator_treatment
 ########################################################################################
 # Mixed Effects Gams
 ########################################################################################
-gam2 <- gamm(mean_speed_norm ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
+gam2 <- gamm(mean_speed ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
               s(time_point,by = predator_treatment) + 
               s(time_point,by = treat_inter) , random = list(replicate= ~1), 
             data = id_data, family = "gaussian",method = "ML")
+
 plot.gam(gam2,pages = 3,all.terms = T)
 gam.check(gam2)
 
