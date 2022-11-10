@@ -23,6 +23,7 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
          treat_inter = as.factor(interaction(treatment,predator_treatment)))
 
 speed_id_plot <-
+  
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
   #geom_point(alpha = 0.2) +
   geom_smooth(method="gam", formula = y ~s(x,bs="tp"),se = FALSE) +
@@ -52,9 +53,20 @@ gam.check(gam1)
 plot.gam(gam1,pages = 3,all.terms = T,seWithMean = TRUE, shift = coef(gam1)[1],residuals = T)
 
 
+
+gam1_rawdata <- gam(mean_speed ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
+              s(time_point,by = predator_treatment)
+              + s(time_point,by = treat_inter)
+              ,data = id_data, family = "gaussian")
+summary(gam1_rawdata)
+
+gam.check(gam1_rawdata)
+plot.gam(gam1_rawdata,pages = 3,all.terms = T)
+
+
 tt <- cbind(id_data,
-            fit = predict(gam1,type="response",se.fit=T)$fit,
-            se = predict(gam1,type="response",se.fit=T)$se.fit)
+            fit = predict(gam1_rawdata,type="response",se.fit=T)$fit,
+            se = predict(gam1_rawdata,type="response",se.fit=T)$se.fit)
 
 tt_plot <- ggplot(tt, aes(x = time_point, y = mean_speed))+
   #geom_smooth(se = FALSE) +
@@ -85,12 +97,15 @@ plot(ggeffects::ggpredict(gam1,terms = c("time_point","treatment","predator_trea
 ########################################################################################
 # Mixed Effects Gams
 ########################################################################################
-gam2 <- gamm(mean_speed_norm ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
+gam2 <- gamm(mean_speed ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
               s(time_point,by = predator_treatment) + 
               s(time_point,by = treat_inter) , 
              #random = list(replicate= ~1),
              correlation=corAR1(form=~1|time_point),
             data = id_data, family = "gaussian",method = "REML")
+
 plot.gam(gam2,pages = 3,all.terms = T,seWithMean = TRUE,shift = coef(gam1)[1])
+
+plot.gam(gam2,pages = 3,all.terms = T)
 gam.check(gam2)
 
