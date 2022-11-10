@@ -1,3 +1,12 @@
+#######################################################################
+#########predator exposure full length data analysis with gams#########
+#######################################################################
+#load packages 
+library(dplyr)
+library(tidyverse)
+library(bestNormalize)
+library(MuMIn)
+library(rstatix)
 require(mgcv)
 
 did_id_data <- read.csv("Data/did_data_IDs.csv")
@@ -25,9 +34,9 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 speed_id_plot <-
   
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
-  #geom_point(alpha = 0.2) +
-  geom_smooth(method="gam", formula = y ~s(x,bs="tp"),se = FALSE) +
-  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  geom_jitter(width = 1) +
+  geom_smooth(method="gam", formula = y ~s(x,bs="tp"),se = T) +
+  facet_grid(~treatment, scales = "fixed")+
   xlab("Time (hours)")+
   ylab("Mean speed")+
   labs(colour = "Predator treatment") +
@@ -37,6 +46,17 @@ speed_id_plot <-
         axis.line = element_line(colour = "black"),
         aspect.ratio = 1,
         panel.border = element_rect(fill = NA, colour = "black"))
+
+
+head(id_data)
+
+means<-id_data %>%
+  group_by(treatment, time_point, predator_treatment ) %>%
+  summarise(speed=var(mean_roundness))
+
+head(means)
+
+ggplot(means, aes(x=time_point, y=speed, col=predator_treatment))+geom_line()+facet_wrap(~treatment)
 
 ggpubr::ggarrange(speed_id_plot,tt_plot,legend = "none")
 ########################################################################################
@@ -49,6 +69,7 @@ gam1 <- gam(mean_speed ~ s(time_point) +
               s(time_point,by = treat_inter) ,
             data = id_data, family = "gaussian")
 summary(gam1)
+par(mfrow = c(2,2))
 gam.check(gam1)
 plot.gam(gam1,pages = 3,all.terms = T,seWithMean = TRUE, shift = coef(gam1)[1],residuals = T)
 
