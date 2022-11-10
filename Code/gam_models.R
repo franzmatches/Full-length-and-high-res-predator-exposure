@@ -25,7 +25,7 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 speed_id_plot <-
   ggplot(id_data, aes(x = time_point, y = mean_speed, col = as.factor(predator_treatment)))+
   #geom_point(alpha = 0.2) +
-  geom_smooth(se = FALSE) +
+  geom_smooth(method="gam", formula = y ~s(x,bs="tp"),se = FALSE) +
   facet_grid(treatment~predator_treatment, scales = "fixed")+
   xlab("Time (hours)")+
   ylab("Mean speed")+
@@ -37,27 +37,31 @@ speed_id_plot <-
         aspect.ratio = 1,
         panel.border = element_rect(fill = NA, colour = "black"))
 
+ggpubr::ggarrange(speed_id_plot,tt_plot,legend = "none")
 ########################################################################################
 # Standard Gams
 ########################################################################################
-gam1 <- gam(mean_speed_norm ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
+gam1 <- gam(mean_speed ~ s(time_point) + 
+              treatment:predator_treatment + 
+              s(time_point,by = treatment) +
               s(time_point,by = predator_treatment) + 
               s(time_point,by = treat_inter) ,
             data = id_data, family = "gaussian")
 summary(gam1)
 gam.check(gam1)
-plot.gam(gam1,pages = 3,all.terms = T)
+plot.gam(gam1,pages = 3,all.terms = T,seWithMean = TRUE, shift = coef(gam1)[1],residuals = T)
 
 
 tt <- cbind(id_data,
             fit = predict(gam1,type="response",se.fit=T)$fit,
             se = predict(gam1,type="response",se.fit=T)$se.fit)
 
-ggplot(tt, aes(x = time_point, y = mean_speed))+
-  geom_smooth(se = FALSE) +
-  geom_line(aes(y=fit)) +
-  geom_ribbon(aes(ymin = fit - 1.96*se, ymax =  fit + 1.96*se,fill=as.factor(predator_treatment)))+
+tt_plot <- ggplot(tt, aes(x = time_point, y = mean_speed))+
+  #geom_smooth(se = FALSE) +
+  geom_line(aes(y=fit,col=as.factor(predator_treatment))) +
+  geom_ribbon(aes(ymin = fit - 1.96*se, ymax =  fit + 1.96*se,fill=as.factor(predator_treatment)),alpha=0.5)+
   facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_discrete(guide="none")+
   xlab("Time (hours)")+
   ylab("Mean speed")+
   labs(colour = "Predator treatment") +
@@ -73,16 +77,20 @@ ggplot(tt, aes(x = time_point, y = mean_speed))+
 
 p_df <- ggeffects::ggpredict(gam1,terms = c("time_point","treat_inter"),condition = "time_point")
 
-plot(ggeffects::ggpredict(gam1,terms = c("time_point","treat_inter")),add.data = F)
-id_data$predator_treatment
+plot(ggeffects::ggpredict(gam1,terms = c("time_point","treat_inter [15.prey, 15.didinium, 15.homalozoon]")),add.data = F)
+plot(ggeffects::ggpredict(gam1,terms = c("time_point","treat_inter [25.prey, 25.didinium, 25.homalozoon]")),add.data = F)
+
+plot(ggeffects::ggpredict(gam1,terms = c("time_point","treatment","predator_treatment")),add.data = F)
 
 ########################################################################################
 # Mixed Effects Gams
 ########################################################################################
 gam2 <- gamm(mean_speed_norm ~ s(time_point) + treatment:predator_treatment + s(time_point,by = treatment) +
               s(time_point,by = predator_treatment) + 
-              s(time_point,by = treat_inter) , random = list(replicate= ~1), 
-            data = id_data, family = "gaussian",method = "ML")
-plot.gam(gam2,pages = 3,all.terms = T)
+              s(time_point,by = treat_inter) , 
+             #random = list(replicate= ~1),
+             correlation=corAR1(form=~1|time_point),
+            data = id_data, family = "gaussian",method = "REML")
+plot.gam(gam2,pages = 3,all.terms = T,seWithMean = TRUE,shift = coef(gam1)[1])
 gam.check(gam2)
 
