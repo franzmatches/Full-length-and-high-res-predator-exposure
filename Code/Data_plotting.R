@@ -8,6 +8,8 @@ library(ggplot2)
 library(bestNormalize) #transforming response variables to fit gaussian model
 library(MuMIn) #model comparison and simplification
 library(rstatix) 
+library(ggh4x)
+library(ggpubr)
 library(glmmTMB) #GLMMs
 library(DHARMa) #GLMM diagnostics
 library(fitdistrplus) #data to distribution fit
@@ -33,6 +35,15 @@ prey_id_data <- prey_id_data %>%
 id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
   #set prey as the first factor for data analysis
   mutate(predator_treatment = factor(predator_treatment, levels = c("prey", "didinium", "homalozoon")))
+
+
+#remove those data where max_abundance was counted above reasonable numbers
+id_data<-id_data %>% filter(max_abundance <35)
+
+
+
+#####Plotting parameters through time#########
+
 
 #plotting max_abundance
 ggplot()+
@@ -323,4 +334,153 @@ ggplot()+
 
 ggsave("VARIANCE_single_replicates_means_and_treatments_means_roundness.pdf", units="in", width=16, height=10) 
 
+
+#-----------------------------------------------------------------------#
+####Plotting relationships of traits with the abundance in the patch#####
+##let's plot first the time series of abundance
+#single treatment mean of abundance
+ggplot(data = id_data %>% group_by(time_point,
+                                    treatment,
+                                    predator_treatment) %>% 
+          summarize(mean_max_ab = mean(max_abundance)),
+        aes(x = time_point, y = mean_max_ab, col = predator_treatment,fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(alpha = .2)+
+  theme_bw()
+
+#see what happens in each replicate  
+ggplot(data = id_data %>% group_by(time_point,
+                                   treatment,
+                                   predator_treatment,
+                                   replicate) %>% 
+         summarise(max_abundance_rep = max(max_abundance)),
+       aes(x = time_point, y = max_abundance_rep,
+           col = predator_treatment,fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_nested_wrap(~treatment*replicate, scales = "free_y")+
+  geom_smooth(alpha = .2)+
+  # geom_smooth(method = "lm", alpha = .2)+
+  theme_bw()
+####-----------------using all ID measurements in each replicate---------------------####
+#length
+plot_length_reps<-ggplot(data = id_data ,
+       aes(x = max_abundance, y = mean_length_um, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_jitter(width = 0.5, shape = 1, alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+#speed
+plot_speed_reps<-ggplot(data = id_data,
+       aes(x = max_abundance, y = mean_speed, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_jitter(width = 0.5, shape = 1, alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+#area
+plot_area_reps<-ggplot(data = id_data,
+       aes(x = max_abundance, y = mean_area_sqrd_um, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_jitter(width = 0.5, shape = 1, alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+#roundness (calculated as roundness = (max(Length_um)/ mean(Width_um)) for each ID)
+plot_round_reps<-ggplot(data = id_data,
+       aes(x = max_abundance, y = mean_roundness, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_jitter(width = 0.5, shape = 1, alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # geom_smooth(alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+
+
+####-----------------using the across replicates means---------------------####
+#length
+plot_length_avg<-ggplot(data = id_data %>% group_by(time_point,
+                                   treatment,
+                                   predator_treatment) %>% 
+         summarize(mean_max_ab = mean(max_abundance),
+                   mean_mean_length = mean(mean_length_um)),
+       aes(x = mean_max_ab, y = mean_mean_length, 
+                           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+glimpse(id_data)
+
+
+#speed
+plot_speed_avg<-ggplot(data = id_data %>% group_by(time_point,
+                                   treatment,
+                                   predator_treatment) %>% 
+         summarize(mean_max_ab = mean(max_abundance),
+                   mean_mean_speeds = mean(mean_speed)),
+       aes(x = mean_max_ab, y = mean_mean_speeds, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+#area
+plot_area_avg<-ggplot(data = id_data %>% group_by(time_point,
+                                   treatment,
+                                   predator_treatment) %>% 
+         summarize(mean_max_ab = mean(max_abundance),
+                   mean_mean_area = mean(mean_area_sqrd_um)),
+       aes(x = mean_max_ab, y = mean_mean_area, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+
+#roundness (calculated as roundness = (max(Length_um)/ mean(Width_um)) for each ID)
+plot_round_avg<-ggplot(data = id_data %>% group_by(time_point,
+                                   treatment,
+                                   predator_treatment) %>% 
+         summarize(mean_max_ab = mean(max_abundance),
+                   mean_mean_roundness = mean(mean_roundness)),
+       aes(x = mean_max_ab, y = mean_mean_roundness, 
+           col = predator_treatment,
+           fill = predator_treatment))+
+  geom_point(alpha = .5)+
+  facet_grid(~treatment)+
+  geom_smooth(method = "lm", alpha = .2)+
+  # geom_smooth(alpha = .2)+
+  # scale_x_continuous(limits = c(0,35))+
+  theme_bw()
+
+speed_plots<-ggarrange(plot_speed_reps, plot_speed_avg, nrow = 2, ncol =  1, common.legend = T)
+length_plots<-ggarrange(plot_length_reps, plot_length_avg, nrow = 2, ncol =  1, common.legend = T)
 
