@@ -14,9 +14,9 @@ library(fitdistrplus) #data to distribution fit
 
 #load in the tracked ID data 
 
-did_id_data <- read.csv("Data/did_data_IDs.csv")
-hom_id_data <- read.csv("Data/hom_data_IDs.csv")
-prey_id_data <- read.csv("Data/prey_data_IDs.csv")
+did_id_data <- read.csv("Data/did_data_IDs_corrected_max_abundance.csv")
+hom_id_data <- read.csv("Data/hom_data_IDs_corrected_max_abundance.csv")
+prey_id_data <- read.csv("Data/prey_data_IDs_correct_max_abundance.csv")
 
 #add predator treatment column to each then combine data frames
 did_id_data <- did_id_data %>%

@@ -481,6 +481,4 @@ plot_round_avg<-ggplot(data = id_data %>% group_by(time_point,
   # scale_x_continuous(limits = c(0,35))+
   theme_bw()
 
-speed_plots<-ggarrange(plot_speed_reps, plot_speed_avg, nrow = 2, ncol =  1, common.legend = T)
-length_plots<-ggarrange(plot_length_reps, plot_length_avg, nrow = 2, ncol =  1, common.legend = T)
 
