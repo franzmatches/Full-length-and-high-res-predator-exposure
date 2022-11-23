@@ -96,7 +96,7 @@ ggplot()+
   #       panel.border = element_rect(fill = NA, colour = "black"))
 
 ggsave("single_replicates_means_and_treatments_means_speed.pdf", units="in", width=16, height=10) 
-ll
+
 
 
 #mean speed with error bars
@@ -313,6 +313,28 @@ ggsave("VARIANCE_single_replicates_means_and_treatments_means_area.pdf", units="
 
 
 
+
+#plotting mean_roundness among replicates and the general treatment means
+ggplot()+
+  # geom_point(data = id_data, aes(x = time_point, y = max_length , group = replicate, col = as.factor(predator_treatment)), alpha = .05)+
+  geom_line(data = id_data %>% group_by(time_point, treatment, predator_treatment, replicate) %>% 
+              summarise(mean_roundness_rep = mean(mean_roundness)),
+            aes(x = time_point, y = mean_roundness_rep, col = as.factor(predator_treatment),
+                group = replicate), alpha = .3)+
+  geom_line(data = id_data %>% group_by(time_point, treatment, predator_treatment) %>% 
+              summarise(mean_roundness_rep = mean(mean_roundness)),
+            aes(x = time_point, y = mean_roundness_rep, col = as.factor(predator_treatment)), size = .7)+
+  # geom_smooth(se = FALSE) +
+  # geom_jitter(width = 1) +
+  facet_grid(predator_treatment~treatment, scales = "free")+
+  xlab("Time (hours)")+
+  ylab("Mean roundness Variance")+
+  labs(colour = "Predator treatment") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_bw()
+
+
+
 #plotting mean_roundness VARIANCE among replicates and the general treatment means
 ggplot()+
   # geom_point(data = id_data, aes(x = time_point, y = max_length , group = replicate, col = as.factor(predator_treatment)), alpha = .05)+
@@ -363,8 +385,7 @@ ggplot(data = id_data %>% group_by(time_point,
   # geom_smooth(method = "lm", alpha = .2)+
   theme_bw()
 ####-----------------using all ID measurements in each replicate---------------------####
-#length
-plot_length_reps<-ggplot(data = id_data ,
+ggplot(data = id_data ,
        aes(x = max_abundance, y = mean_length_um, 
            col = predator_treatment,
            fill = predator_treatment))+
@@ -376,7 +397,7 @@ plot_length_reps<-ggplot(data = id_data ,
 
 
 #speed
-plot_speed_reps<-ggplot(data = id_data,
+ggplot(data = id_data,
        aes(x = max_abundance, y = mean_speed, 
            col = predator_treatment,
            fill = predator_treatment))+
@@ -388,7 +409,7 @@ plot_speed_reps<-ggplot(data = id_data,
 
 
 #area
-plot_area_reps<-ggplot(data = id_data,
+ggplot(data = id_data,
        aes(x = max_abundance, y = mean_area_sqrd_um, 
            col = predator_treatment,
            fill = predator_treatment))+
@@ -400,7 +421,7 @@ plot_area_reps<-ggplot(data = id_data,
 
 
 #roundness (calculated as roundness = (max(Length_um)/ mean(Width_um)) for each ID)
-plot_round_reps<-ggplot(data = id_data,
+ggplot(data = id_data,
        aes(x = max_abundance, y = mean_roundness, 
            col = predator_treatment,
            fill = predator_treatment))+
@@ -416,7 +437,7 @@ plot_round_reps<-ggplot(data = id_data,
 
 ####-----------------using the across replicates means---------------------####
 #length
-plot_length_avg<-ggplot(data = id_data %>% group_by(time_point,
+ggplot(data = id_data %>% group_by(time_point,
                                    treatment,
                                    predator_treatment) %>% 
          summarize(mean_max_ab = mean(max_abundance),
@@ -434,7 +455,7 @@ glimpse(id_data)
 
 
 #speed
-plot_speed_avg<-ggplot(data = id_data %>% group_by(time_point,
+ggplot(data = id_data %>% group_by(time_point,
                                    treatment,
                                    predator_treatment) %>% 
          summarize(mean_max_ab = mean(max_abundance),
@@ -450,7 +471,7 @@ plot_speed_avg<-ggplot(data = id_data %>% group_by(time_point,
 
 
 #area
-plot_area_avg<-ggplot(data = id_data %>% group_by(time_point,
+ggplot(data = id_data %>% group_by(time_point,
                                    treatment,
                                    predator_treatment) %>% 
          summarize(mean_max_ab = mean(max_abundance),
@@ -480,5 +501,64 @@ plot_round_avg<-ggplot(data = id_data %>% group_by(time_point,
   # geom_smooth(alpha = .2)+
   # scale_x_continuous(limits = c(0,35))+
   theme_bw()
+
+
+
+
+
+
+####Fit a model on the control and scale the treatments based on that###
+#15 degrees
+
+stnd_lm_15_fit<-lm(mean_speed_treat~time_point,
+            data = id_data %>% group_by(time_point, treatment, predator_treatment) %>% 
+              summarise(mean_speed_treat = mean(mean_speed)) %>%
+              filter(predator_treatment == "prey",
+                     treatment == 15))$fitted
+
+
+
+stnd_lm_25_fit<-lm(mean_speed_treat~time_point,
+               data = id_data %>% group_by(time_point, treatment, predator_treatment) %>% 
+                 summarise(mean_speed_treat = mean(mean_speed)) %>%
+                 filter(predator_treatment == "prey",
+                        treatment == 25))$fitted
+
+##data wrangling to substract the model fitted on the average mean_speed of the control to each replicate of each treatment
+data_reps<-id_data %>% group_by(time_point,
+                                treatment,
+                                predator_treatment,
+                                replicate) %>% 
+  summarize(mean_speed_rep = mean(mean_speed)) %>% 
+  group_by(predator_treatment,replicate) %>%
+  nest() %>%
+  mutate(data = purrr::map(data, function(x){
+    x <- x %>% 
+      arrange(treatment) %>%
+      left_join(data.frame(time_point = rep(0:24,2), detrend_ts = c(stnd_lm_15_fit,stnd_lm_25_fit),
+                           treatment = c(rep(15,25),rep(25,25))),
+                           by = c("time_point","treatment")) %>%
+      #group_by(treatment) %>%
+      mutate(detrend_speed = mean_speed_rep - detrend_ts)
+    return(x)
+  })) %>%
+  unnest(data)
+  
+
+##plot the difference from such model fit over time
+ggplot()+
+  geom_line(data = data_reps,
+            aes(x = time_point, y = detrend_speed, col = as.factor(predator_treatment),
+                group = replicate), alpha = .3)+
+  facet_grid(predator_treatment~treatment, scales = "fixed")+
+  xlab("Time (hours)")+
+  ylab("Mean speed")+
+  labs(colour = "Predator treatment") +
+  scale_color_brewer(palette = "Dark2")+
+  theme_bw()
+
+
+
+
 
 
