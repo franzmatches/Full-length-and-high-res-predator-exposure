@@ -85,7 +85,7 @@ ggplot()+
   #       panel.border = element_rect(fill = NA, colour = "black"))
 
 ggsave("single_replicates_means_and_treatments_means_speed.pdf", units="in", width=16, height=10) 
-
+ll
 
 
 #mean speed with error bars
