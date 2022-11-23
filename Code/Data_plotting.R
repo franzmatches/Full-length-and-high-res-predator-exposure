@@ -384,7 +384,7 @@ ggplot(data = id_data %>% group_by(time_point,
   geom_smooth(alpha = .2)+
   # geom_smooth(method = "lm", alpha = .2)+
   theme_bw()
-####-----------------using all ID measurements in each replicate---------------------####
+####-----------------using together all ID measurements of each replicate---------------------####
 ggplot(data = id_data ,
        aes(x = max_abundance, y = mean_length_um, 
            col = predator_treatment,
@@ -504,10 +504,30 @@ plot_round_avg<-ggplot(data = id_data %>% group_by(time_point,
 
 
 
+####doing each replicate separately########
+
+
+plots_rep<-id_data %>% 
+  group_by(treatment, predator_treatment, replicate) %>% 
+  group_map(~ggplot(.) + aes(x = max_abundance,
+                             y = mean_speed)+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "lm")+
+  ggtitle(.y[[2]]))
+
+ggplot(id_data %>% 
+         group_by(treatment, predator_treatment, time_point, replicate) %>% 
+         summarise(mean_mean_speed = mean(mean_speed),
+                   max_abundance = max(max_abundance)),
+       aes(x = max_abundance, y = mean_mean_speed, col = as.factor(replicate), fill = as.factor(replicate)))+ 
+  geom_point()+
+  geom_smooth(method = "lm", se = F)+
+  facet_nested_wrap(~treatment*predator_treatment)+
+  theme_bw()
 
 
 
-####Fit a model on the control and scale the treatments based on that###
+######Fit a model on the control and scale the treatments based on that######
 #15 degrees
 
 stnd_lm_15_fit<-lm(mean_speed_treat~time_point,
