@@ -40,7 +40,13 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 #remove those data where max_abundance was counted above reasonable numbers
 id_data<-id_data %>% filter(max_abundance <35)
 
+###plotting relationships length_width thoughthrough time
 
+ggplot(id_data, aes(x = mean_length_um, y = mean_width_um, col = time_point))+
+  geom_point(shape = 1, alpha = .4)+
+  facet_nested_wrap(~treatment*predator_treatment)+
+  geom_smooth(data = id_data, aes(x = mean_length_um, y = mean_width_um, group = time_point), method = "lm", se = F)+
+  theme_bw()
 
 #####Plotting parameters through time#########
 
