@@ -197,3 +197,53 @@ conditional_effects(brms3,effects = "time_point:treatment")
 conditional_effects(brms3,effects = "time_point:predator_treatment")
 conditional_effects(brms3,effects = "time_point:treat_inter")
 
+
+
+
+brms_null <- brm(bf(mean_speed ~ s(time_point) + 
+                  treatment*predator_treatment + 
+                  s(time_point,by = treatment) +
+                  s(time_point,by = predator_treatment) +
+                  s(time_point,by = treat_inter)),
+             data = id_data,
+             family = gaussian(), 
+             prior = c(prior(normal(0, 1), class = b)),
+             chains = 4, 
+             thin =0.0005*4000,
+             cores = 8, 
+             iter = 4000, 
+             warmup = 2000, 
+             silent = 0,
+             control=list(adapt_delta=0.975,max_treedepth = 20))
+
+saveRDS(brms_null, file = "Results/brms_null.rds")
+
+summary(brms_null)
+#bayestestR::describe_posterior(brms_null, ci = 0.95, test="none")
+
+brms::mcmc_plot(brms_null, 
+                #type = "areas",
+                type = "intervals",
+                prob = 0.95)
+new_dat <- expand.grid(treatment = c(15,25),
+                       predator_treatment = c("prey","didinium","homalozoon"),
+                       time_point = seq(0,24,by=0.1), replicate = NA, ID = NA) |>
+  mutate(treat_inter = interaction(treatment,predator_treatment))
+
+global_dat_null <- cbind(new_dat,
+                     predict(brms_null,newdata = new_dat, re_formula =NA))
+
+ggplot(global_dat_null)+
+  geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
+  geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_discrete(guide="none")+
+  xlab("Time (hours)")+
+  ylab("Mean speed")+
+  labs(colour = "Predator treatment") +
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        aspect.ratio = 1,
+        panel.border = element_rect(fill = NA, colour = "black"))
