@@ -135,7 +135,8 @@ bprior <- c(prior(normal(0, 1), class = b),
 
 bprior2 <- c(prior(normal(0, 1), class = b),
             #prior(lkj(1), class = cor),
-            prior(normal(0, 2), class = sds))
+            prior(normal(0, 2), class = sds),
+            prior(exponential(1),class = sigma))
 
 brms3 <- brm(bf(mean_speed ~ s(time_point) + 
                   treatment*predator_treatment + 
@@ -156,6 +157,7 @@ brms3 <- brm(bf(mean_speed ~ s(time_point) +
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
 saveRDS(brms3, file = "Results/brms3.rds")
+brms3<-readRDS("Results/brms3.rds")
 
 summary(brms3)
 #bayestestR::describe_posterior(brms3, ci = 0.95, test="none")
@@ -247,3 +249,33 @@ ggplot(global_dat_null)+
         axis.line = element_line(colour = "black"),
         aspect.ratio = 1,
         panel.border = element_rect(fill = NA, colour = "black"))
+
+
+
+
+#potential linear model bayesian for length ~ width
+brms_lm <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
+         ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
+         (1|replicate/ID)),
+    data = id_data,
+    family = gaussian(), 
+    prior = bprior_lm,
+    chains = 4, 
+    thin =0.0005*4000,
+    cores = 4, 
+    iter = 2000, 
+    warmup = 1000, 
+    silent = 0,
+    control=list(adapt_delta=0.975,max_treedepth = 20))
+
+#priors
+get_prior(bf(mean_width_um ~ mean_length_um *time_point*treatment*predator_treatment+
+             ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
+               (1|replicate/ID)),
+          data = id_data,
+          family = gaussian())
+
+bprior_lm <- c(prior(flat(-1,1),class = ar),
+               prior(normal(0, 1), class = b),
+            prior(exponential(1),class = sd),
+            prior(exponential(1),class = sigma))
