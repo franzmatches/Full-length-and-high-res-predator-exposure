@@ -219,7 +219,7 @@ brms_null <- brm(bf(mean_speed ~ s(time_point) +
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
 saveRDS(brms_null, file = "Results/brms_null.rds")
-
+brms_null <-readRDS("Results/brms_null.rds")
 summary(brms_null)
 #bayestestR::describe_posterior(brms_null, ci = 0.95, test="none")
 
@@ -254,6 +254,19 @@ ggplot(global_dat_null)+
 
 
 #potential linear model bayesian for length ~ width
+#priors
+get_prior(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
+               ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
+               (1|replicate/ID)),
+          data = id_data,
+          family = gaussian())
+
+bprior_lm <- c(prior("",class = ar , ub = 1, lb = -1),
+               prior(normal(0, 1), class = b),
+               prior(exponential(1),class = sd),
+               prior(exponential(1),class = sigma))
+
+
 brms_lm <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
          ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
          (1|replicate/ID)),
@@ -268,14 +281,42 @@ brms_lm <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_t
     silent = 0,
     control=list(adapt_delta=0.975,max_treedepth = 20))
 
-#priors
-get_prior(bf(mean_width_um ~ mean_length_um *time_point*treatment*predator_treatment+
-             ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
-               (1|replicate/ID)),
-          data = id_data,
-          family = gaussian())
+saveRDS(brms_lm, file = "Results/brms_lm.rds")
+brms_lm <- readRDS("Results/brms_lm.rds")
 
-bprior_lm <- c(prior(flat(-1,1),class = ar),
-               prior(normal(0, 1), class = b),
-            prior(exponential(1),class = sd),
-            prior(exponential(1),class = sigma))
+brms::mcmc_plot(brms_lm, 
+                #type = "areas",
+                type = "intervals",
+                prob = 0.95)
+
+new_dat_lm <- expand.grid(treatment = c(15,25),
+                       predator_treatment = c("prey","didinium","homalozoon"),
+                       time_point = 0:24, replicate = NA, ID = NA,
+                       mean_length_um = seq(floor(min(id_data$mean_length_um)),ceiling(max(id_data$mean_length_um)),1)) |>
+  mutate(treat_inter = interaction(treatment,predator_treatment))
+
+global_datlm <- cbind(new_dat_lm,
+                     predict(brms_lm,newdata = new_dat_lm, re_formula =NA))
+
+global_datlm <- cbind(id_data,predict(brms_lm, re_formula =NA))
+
+ggplot(global_datlm)+
+  geom_line(aes(x = mean_length_um, y=Estimate,col=as.factor(time_point))) +
+  #geom_ribbon(aes(x = mean_length_um,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(time_point)),alpha=0.5)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_discrete(guide="none")+
+  xlab("Mean length")+
+  ylab("Mean width")+
+  labs(colour = "Time point") +
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        aspect.ratio = 1,
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+conditional_effects(brms_lm,effects = "mean_length_um:time_point",conditions = data.frame(treatment = c(15,25)))
+conditional_effects(brms_lm,effects = "mean_length_um:time_point",conditions = data.frame(predator_treatment =  c("prey","didinium","homalozoon")))
+
+
