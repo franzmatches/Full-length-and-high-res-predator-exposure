@@ -329,11 +329,16 @@ cond_pred_treatment <- conditional_effects(brms_lm,effects = "mean_length_um:tim
                                            conditions = data.frame(predator_treatment =  c("prey","didinium","homalozoon")))[[1]]|>
   mutate(cond__ = predator_treatment)
 
-cond_pred_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:predator_treatment",
+cond_pred_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
                                            conditions = data.frame(time_point = seq(0,24,by=8)))[[1]]|>
   mutate(cond__ = time_point,
          effect = "predator")
   
+cond_inter_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
+                                            conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
+                                                                    predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
+  mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
+         effect = "interaction")
 
 ggpubr::ggarrange(
   ggplot(cond_treatment)+
@@ -371,6 +376,40 @@ ggplot(rbind(cond_treatment2,cond_pred_treatment2) |>
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
   geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
   facet_grid(cond__~effect, scales = "fixed") +
+  scale_fill_discrete(name = "Treatment") + 
+  scale_color_discrete(name = "Treatment") + 
+  xlab("Mean length")+
+  ylab("Mean width")+
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        aspect.ratio = 1,
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+ggplot(rbind(cond_treatment2,cond_pred_treatment2) |>
+         mutate(cond__ = factor(paste0("t",cond__),levels = c("t0","t8","t16","t24"))))+
+  geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
+  geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
+  facet_grid(cond__~effect, scales = "fixed") +
+  scale_fill_discrete(name = "Treatment") + 
+  scale_color_discrete(name = "Treatment") + 
+  xlab("Mean length")+
+  ylab("Mean width")+
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        aspect.ratio = 1,
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+ggplot(cond_inter_treatment2 |>
+         mutate(cond__ = factor(paste0("t",time_point),levels = c("t0","t8","t16","t24"))))+
+  geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
+  geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
+  facet_grid(cond__~predator_treatment, scales = "fixed") +
   scale_fill_discrete(name = "Treatment") + 
   scale_color_discrete(name = "Treatment") + 
   xlab("Mean length")+
