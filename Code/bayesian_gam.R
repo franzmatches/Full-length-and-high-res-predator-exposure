@@ -276,8 +276,8 @@ brms_lm <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_t
     chains = 4, 
     thin =0.0005*4000,
     cores = 4, 
-    iter = 2000, 
-    warmup = 1000, 
+    iter = 4000, 
+    warmup = 2000, 
     silent = 0,
     control=list(adapt_delta=0.975,max_treedepth = 20))
 
