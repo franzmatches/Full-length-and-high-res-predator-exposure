@@ -36,7 +36,6 @@ ggplot(cond_inter_treatment2 |>
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        aspect.ratio = 1,
         panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -54,7 +53,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -72,7 +70,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -90,7 +87,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -108,7 +104,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -126,7 +121,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -144,7 +138,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -162,7 +155,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -180,7 +172,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
 
 
@@ -199,7 +190,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -217,7 +207,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -235,7 +224,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -253,7 +241,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -271,7 +258,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -289,7 +275,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -307,7 +292,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -325,7 +309,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -343,7 +326,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -361,7 +343,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -379,7 +360,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -397,7 +377,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -415,7 +394,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -433,7 +411,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black"))
   
   ggplot(cond_inter_treatment2 |>
@@ -451,7 +428,6 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
           panel.border = element_rect(fill = NA, colour = "black")) 
   
   ggplot(cond_inter_treatment2 |>
@@ -469,7 +445,7 @@ ggplot(cond_inter_treatment2 |>
     theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
-          aspect.ratio = 1,
+  
           panel.border = element_rect(fill = NA, colour = "black")) 
   
 camcorder::gg_playback(
