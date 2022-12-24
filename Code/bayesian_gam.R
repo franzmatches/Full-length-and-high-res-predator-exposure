@@ -156,12 +156,12 @@ brms3 <- brm(bf(mean_speed ~ s(time_point) +
              family = gaussian(), 
              prior = bprior2,
              chains = 4, 
-             thin =0.0005*4000,
-             cores = 8, 
-             iter = 4000, 
+             thin =0.0005*10000,
+             cores = 4, 
+             iter = 10000, 
              warmup = 2000, 
              silent = 0,
-             control=list(adapt_delta=0.975,max_treedepth = 20))
+             control=list(adapt_delta=0.975,max_treedepth = 10))
 
 saveRDS(brms3, file = "Results/brms3.rds")
 brms3<-readRDS("Results/brms3.rds")
@@ -480,10 +480,10 @@ brms_group <- brm(bf(mean_speed ~ s(time_point) +
              family = gaussian(), 
              prior = group_prior,
              chains = 4, 
-             thin =0.0005*4000,
-             cores = 8, 
-             iter = 4000, 
-             warmup = 1000, 
+             thin =0.0005*10000,
+             cores = 4, 
+             iter = 10000, 
+             warmup = 2000, 
              silent = 0,
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
@@ -535,10 +535,10 @@ brms_lm_grouped <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*pr
                family = gaussian(), 
                prior = bprior_lm_grouped,
                chains = 4, 
-               thin =0.0005*4000,
+               thin =0.0005*10000,
                cores = 4, 
-               iter = 4000, 
-               warmup = 1000, 
+               iter = 10000, 
+               warmup = 2000, 
                silent = 0,
                control=list(adapt_delta=0.975,max_treedepth = 20))
 
