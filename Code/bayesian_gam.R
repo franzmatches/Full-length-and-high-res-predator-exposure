@@ -43,103 +43,6 @@ tt <- get_prior(bf(mean_speed ~ s(time_point) +
                 data = id_data,
                 family = gaussian())
 
-bprior <- c(prior(normal(0, 1), class = b),
-            prior(lkj(1), class = cor),
-            prior(normal(0, 1), class = sds),
-            prior(exponential(1),class = sd),
-            prior(exponential(1),class = sigma)
-)
-
-brms1 <- brm(bf(mean_speed ~ s(time_point) + 
-                  treatment*predator_treatment + 
-                  #s(time_point,by = treatment) +
-                  #s(time_point,by = predator_treatment) +
-                  s(time_point,by = treat_inter) + 
-                  #ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
-                  (time_point|replicate/ID)),
-             data = id_data,
-             family = gaussian(), 
-             prior = bprior,
-             chains = 4, 
-             thin =0.0005*4000,
-             cores = 4, 
-             iter = 4000, 
-             warmup = 2000, 
-             silent = 0,
-             control=list(adapt_delta=0.99,max_treedepth = 11),
-             backend = "cmdstanr"
-)
-
-brms::mcmc_plot(brms1, 
-                type = "areas",
-                #type = "intervals",
-                prob = 0.95)
-
-pp_check(brms1,type = "loo_pit_qq")
-new_dat <- expand.grid(treatment = c(15,25),
-                       predator_treatment = c("prey","didinium","homalozoon"),
-                       time_point = 0:24) |>
-  mutate(treat_inter = interaction(treatment,predator_treatment))
-
-tt <- predict(brms1,re_formula = ~ (time_point|replicate/ID))
-pred_dat <- cbind(id_data,rep_fit = predict(brms1,re_formula = ~ (time_point|replicate/ID))[,1],
-                  global_fit = predict(brms1,re_formula =NA)[,1],
-                  lwr = predict(brms1,re_formula =NA)[,3],upr = predict(brms1,re_formula =NA)[,4])
-
-
-pred_dat2 <- cbind(id_data,rep_fit = predict(brms1,re_formula = ~ (time_point|replicate/ID))[,1])
-
-global_dat <- cbind(new_dat,
-                    global_fit = predict(brms1,newdata = new_dat, re_formula =NA)[,1],
-                    lwr = predict(brms1,newdata = new_dat,re_formula =NA)[,3],
-                    upr = predict(brms1,newdata = new_dat,re_formula =NA)[,4])
-
-ggplot(pred_dat)+
-  #geom_smooth(se = FALSE) +
-  geom_line(aes(x = time_point,y=rep_fit,col=as.factor(predator_treatment),group = interaction(replicate,ID)),alpha = 0.3) +
-  geom_line(data = global_dat,aes(x = time_point, y=global_fit,col=as.factor(predator_treatment))) +
-  geom_ribbon(data = global_dat,aes(x = time_point,ymin = lwr, ymax =  upr,fill=as.factor(predator_treatment)),alpha=0.5)+
-  facet_grid(treatment~predator_treatment, scales = "fixed")+
-  scale_fill_discrete(guide="none")+
-  xlab("Time (hours)")+
-  ylab("Mean speed")+
-  labs(colour = "Predator treatment") +
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
-
-
-brms2 <- brm(bf(mean_speed ~ s(time_point) + 
-                  treatment*predator_treatment + 
-                  s(time_point,by = treatment) +
-                  s(time_point,by = predator_treatment) +
-                  s(time_point,by = treat_inter) + 
-                  ar(time = time_point,gr = replicate:treat_inter:ID,p=1)+
-                  (time_point|replicate/ID)),
-             data = id_data,
-             family = gaussian(), 
-             prior = bprior,
-             chains = 4, 
-             thin =0.0005*4000,
-             cores = 4, 
-             iter = 4000, 
-             warmup = 2000, 
-             silent = 0,
-             control=list(adapt_delta=0.99,max_treedepth = 11),
-             backend = "cmdstanr"
-)
-
-
-
-bprior <- c(prior(normal(0, 1), class = b),
-            prior(lkj(1), class = cor),
-            prior(normal(0, 1), class = sds),
-            prior(exponential(1),class = sd),
-            prior(exponential(1),class = sigma)
-)
-
 bprior2 <- c(prior(normal(0, 1), class = b),
             #prior(lkj(1), class = cor),
             prior(normal(0, 2), class = sds),
@@ -157,7 +60,7 @@ brms3 <- brm(bf(mean_speed ~ s(time_point) +
              prior = bprior2,
              chains = 4, 
              thin =0.0005*10000,
-             cores = 4, 
+             cores = 10, 
              iter = 10000, 
              warmup = 2000, 
              silent = 0,
@@ -168,6 +71,8 @@ brms3<-readRDS("Results/brms3.rds")
 
 summary(brms3)
 #bayestestR::describe_posterior(brms3, ci = 0.95, test="none")
+pp_check(brms3,type = "dens_overlay")
+pp_check(brms3,type = "loo_pit_qq")
 
 brms::mcmc_plot(brms3, 
                 #type = "areas",
@@ -289,15 +194,18 @@ brms_lm <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_t
     family = gaussian(), 
     prior = bprior_lm,
     chains = 4, 
-    thin =0.0005*4000,
+    thin =0.0005*10000,
     cores = 4, 
-    iter = 4000, 
+    iter = 10000, 
     warmup = 2000, 
     silent = 0,
-    control=list(adapt_delta=0.975,max_treedepth = 20))
+    control=list(adapt_delta=0.975,max_treedepth = 10))
 
 saveRDS(brms_lm, file = "Results/brms_lm.rds")
 brms_lm <- readRDS("Results/brms_lm.rds")
+
+pp_check(brms_lm,type = "dens_overlay")
+pp_check(brms_lm,type = "loo_pit_qq")
 
 brms::mcmc_plot(brms_lm, 
                 #type = "areas",
@@ -490,6 +398,9 @@ brms_group <- brm(bf(mean_speed ~ s(time_point) +
 saveRDS(brms_group, file = "Results/brms_group.rds")
 brms_group<-readRDS("Results/brms_group.rds")
 
+pp_check(brms_group,type = "dens_overlay")
+pp_check(brms_group,type = "loo_pit_qq")
+
 summary(brms_group)
 
 new_dat <- expand.grid(treatment = c(15,25),
@@ -545,6 +456,10 @@ brms_lm_grouped <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*pr
 saveRDS(brms_lm_grouped, file = "Results/brms_lm_grouped.rds")
 brms_lm_grouped <- readRDS("Results/brms_lm_grouped.rds")
 
+pp_check(brms_lm_grouped,type = "dens_overlay")
+pp_check(brms_lm_grouped,type = "loo_pit_qq")
+
+summary(brms_lm_grouped)
 
 cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "mean_length_um:treatment",
                                                 conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
