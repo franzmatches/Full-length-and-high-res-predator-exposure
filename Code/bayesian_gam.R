@@ -64,7 +64,7 @@ brms3 <- brm(bf(mean_speed ~ s(time_point) +
              iter = 10000, 
              warmup = 2000, 
              silent = 0,
-             control=list(adapt_delta=0.975,max_treedepth = 10))
+             control=list(adapt_delta=0.975,max_treedepth = 15))
 
 saveRDS(brms3, file = "Results/brms3.rds")
 brms3<-readRDS("Results/brms3.rds")
@@ -78,9 +78,6 @@ brms::mcmc_plot(brms3,
                 #type = "areas",
                 type = "intervals",
                 prob = 0.95)
-pred_dat2 <- cbind(id_data,rep_fit = predict(brms3,re_formula = ~ (time_point|replicate/ID))[,1],
-                  global_fit = predict(brms3,re_formula =NA)[,1],
-                  lwr = predict(brms3,re_formula =NA)[,3],upr = predict(brms3,re_formula =NA)[,4])
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
@@ -91,7 +88,8 @@ global_dat2 <- cbind(new_dat,
                     predict(brms3,newdata = new_dat, re_formula =NA))
 
 ggplot(global_dat2 |>
-         mutate(treatment = paste0(treatment,"\u00B0C")))+
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
   geom_line(aes(x = time_point, y=Estimate),col="black") +
@@ -106,9 +104,12 @@ ggplot(global_dat2 |>
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        strip.text = element_text(face = "bold"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
+
 
 
 conditional_effects(brms3,effects = "time_point")
@@ -153,16 +154,23 @@ new_dat <- expand.grid(treatment = c(15,25),
 global_dat_null <- cbind(new_dat,
                      predict(brms_null,newdata = new_dat, re_formula =NA))
 
-ggplot(global_dat_null)+
-  geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
-  geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
+ggplot(global_dat_null |>
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_line(aes(x = time_point, y=Estimate),col="black") +
+  geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(treatment)),alpha=0.3)+
   facet_grid(treatment~predator_treatment, scales = "fixed")+
-  scale_fill_discrete(guide="none")+
+  #scale_fill_discrete(guide="none")+
+  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  #scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   xlab("Time (hours)")+
-  ylab("Mean speed")+
+  ylab("Mean speed  (\u03BCm/s)")+
   labs(colour = "Predator treatment") +
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        strip.text = element_text(face = "bold"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
@@ -212,125 +220,16 @@ brms::mcmc_plot(brms_lm,
                 type = "intervals",
                 prob = 0.95)
 
-new_dat_lm <- expand.grid(treatment = c(15,25),
-                       predator_treatment = c("prey","didinium","homalozoon"),
-                       time_point = 0:24, replicate = NA, ID = NA,
-                       mean_length_um = seq(floor(min(id_data$mean_length_um)),ceiling(max(id_data$mean_length_um)),1)) |>
-  mutate(treat_inter = interaction(treatment,predator_treatment))
-
-global_datlm <- cbind(new_dat_lm,
-                     predict(brms_lm,newdata = new_dat_lm, re_formula =NA))
-
-global_datlm <- cbind(id_data,predict(brms_lm, re_formula =NA))
-
-ggplot(global_datlm)+
-  geom_line(aes(x = mean_length_um, y=Estimate,col=as.factor(time_point))) +
-  #geom_ribbon(aes(x = mean_length_um,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(time_point)),alpha=0.5)+
-  facet_grid(treatment~predator_treatment, scales = "fixed")+
-  scale_fill_discrete(guide="none")+
-  xlab("Mean length (\u03BCm)")+
-  ylab("Mean width (\u03BCm)")+
-  labs(colour = "Time point") +
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
-
-
-cond_treatment <- conditional_effects(brms_lm,effects = "mean_length_um:time_point",
-                                      conditions = data.frame(treatment = c(15,25)))[[1]] |>
-  mutate(cond__ = treatment)
-
-cond_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
-                                      conditions = data.frame(time_point = seq(0,24,by=8)))[[1]] |>
-  mutate(cond__ = time_point,
-         effect = "temperature")
-
-cond_pred_treatment <- conditional_effects(brms_lm,effects = "mean_length_um:time_point",
-                                           conditions = data.frame(predator_treatment =  c("prey","didinium","homalozoon")))[[1]]|>
-  mutate(cond__ = predator_treatment)
-
-cond_pred_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
-                                           conditions = data.frame(time_point = seq(0,24,by=8)))[[1]]|>
-  mutate(cond__ = time_point,
-         effect = "predator")
-  
-cond_inter_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
-                                            conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
-                                                                    predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
-  mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
-         effect = "interaction")
-
 cond_inter_treatment2 <- conditional_effects(brms_lm,effects = "mean_length_um:treatment",
                                              conditions = data.frame(expand.grid(time_point = unique(id_data$time_point),
                                                                                  predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
   mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
          effect = "interaction")
 
-ggpubr::ggarrange(
-  ggplot(cond_treatment)+
-    geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
-    geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
-    facet_wrap(~treatment)+
-    xlab("Mean length (\u03BCm)")+
-    ylab("Mean width (\u03BCm)")+
-    scale_fill_discrete(name = "Time point") + 
-    scale_color_discrete(name = "Time point") + 
-    theme_classic()+
-    theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          panel.border = element_rect(fill = NA, colour = "black")),
-  ggplot(cond_pred_treatment)+
-    geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
-    geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
-    facet_wrap(~predator_treatment)+
-    xlab("Mean length (\u03BCm)")+
-    ylab("Mean width (\u03BCm)")+
-    scale_fill_discrete(name = "Time point") + 
-    scale_color_discrete(name = "Time point") + 
-    theme_classic()+
-    theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          panel.border = element_rect(fill = NA, colour = "black"))
-) 
-  
-ggplot(rbind(cond_treatment2,cond_pred_treatment2) |>
-         mutate(cond__ = factor(paste0("t",cond__),levels = c("t0","t8","t16","t24"))))+
-  geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
-  geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
-  facet_grid(cond__~effect, scales = "fixed") +
-  scale_fill_discrete(name = "Treatment") + 
-  scale_color_discrete(name = "Treatment") + 
-  xlab("Mean length (\u03BCm)")+
-  ylab("Mean width (\u03BCm)")+
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
-
-
-ggplot(rbind(cond_treatment2,cond_pred_treatment2) |>
-         mutate(cond__ = factor(paste0("t",cond__),levels = c("t0","t8","t16","t24"))))+
-  geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
-  geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
-  facet_grid(cond__~effect, scales = "fixed") +
-  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842","#C0CF7A","#B86387","#6B663A")) + 
-  scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842","#C0CF7A","#B86387","#6B663A")) + 
-  xlab("Mean length (\u03BCm)")+
-  ylab("Mean width (\u03BCm)")+
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
-
-
 ggplot(cond_inter_treatment2 |>
-         mutate(cond__ = factor(paste0("t",time_point),levels = paste0("t",unique(time_point)))))+
+         mutate(cond__ = factor(paste0("t",time_point),levels = paste0("t",unique(time_point))))|>
+         mutate(effect2__ = paste0(effect2__,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
   geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
   facet_grid(cond__~predator_treatment, scales = "fixed") +
@@ -341,6 +240,9 @@ ggplot(cond_inter_treatment2 |>
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         panel.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
 
@@ -353,7 +255,8 @@ cond_inter_treatment_sub <- conditional_effects(brms_lm,effects = "mean_length_u
 
 ggplot(cond_inter_treatment_sub |>
          mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
-         mutate(effect2__ = paste0(effect2__,"\u00B0C")))+
+         mutate(effect2__ = paste0(effect2__,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
   geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
   facet_grid(cond__~predator_treatment, scales = "fixed") +
@@ -365,6 +268,7 @@ ggplot(cond_inter_treatment_sub |>
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text = element_text(face = "bold"),
         strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
@@ -412,7 +316,8 @@ global_dat_grouped <- cbind(new_dat,
                      predict(brms_group,newdata = new_dat, re_formula =NA))
 
 ggplot(global_dat_grouped |>
-         mutate(treatment = paste0(treatment,"\u00B0C")))+
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
   geom_line(aes(x = time_point, y=Estimate),col="black") +
@@ -427,6 +332,7 @@ ggplot(global_dat_grouped |>
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
         strip.text = element_text(face = "bold"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
@@ -469,7 +375,8 @@ cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "m
 
 ggplot(cond_inter_treatment_grouped |>
          mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
-         mutate(effect2__ = paste0(effect2__,"\u00B0C")))+
+         mutate(effect2__ = paste0(effect2__,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
   geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
   facet_grid(cond__~predator_treatment, scales = "fixed") +
@@ -481,6 +388,7 @@ ggplot(cond_inter_treatment_grouped |>
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text = element_text(face = "bold"),
         strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
