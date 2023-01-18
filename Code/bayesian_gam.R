@@ -2,6 +2,7 @@ require(brms)
 require(Matrix)
 require(tidyverse)
 require(bestNormalize)
+require(ggh4x)
 
 did_id_data <- read.csv("Data/did_data_IDs_corrected_max_abundance.csv")
 hom_id_data <- read.csv("Data/hom_data_IDs_corrected_max_abundance.csv")
@@ -28,6 +29,8 @@ id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 grouped_id_data <- id_data %>% 
   group_by(treatment,predator_treatment,replicate,treat_inter,time_point) %>%
   summarise(across(c(max_abundance:mean_roundness,mean_speed_norm), ~mean(.x)))
+
+
 
 
 ########################################################################################
@@ -166,14 +169,16 @@ ggplot(global_dat_null |>
   xlab("Time (hours)")+
   ylab("Mean speed  (\u03BCm/s)")+
   labs(colour = "Predator treatment") +
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        strip.text.y.right = element_text(angle = 0),
-        strip.text.x = element_text(face = "bold.italic"),
-        strip.text = element_text(face = "bold"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+  theme_bw()+
+  # theme_classic()+
+  # theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+  #       strip.text.y.right = element_text(angle = 0),
+  #       strip.text.x = element_text(face = "bold.italic"),
+  #       strip.text = element_text(face = "bold"),
+  #       panel.background = element_blank(),
+  #       axis.line = element_line(colour = "black"),
+  #       panel.border = element_rect(fill = NA, colour = "black"))
+  
 
 
 
@@ -299,6 +304,11 @@ brms_group <- brm(bf(mean_speed ~ s(time_point) +
              silent = 0,
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
+ggplot(data = grouped_id_data, aes(x = time_point, y = mean_speed, group = replicate))+
+  geom_line()+
+  facet_nested_wrap(~treatment*predator_treatment)+
+  theme_bw()
+
 saveRDS(brms_group, file = "Results/brms_group.rds")
 brms_group<-readRDS("Results/brms_group.rds")
 
@@ -315,6 +325,7 @@ new_dat <- expand.grid(treatment = c(15,25),
 global_dat_grouped <- cbind(new_dat,
                      predict(brms_group,newdata = new_dat, re_formula =NA))
 
+
 ggplot(global_dat_grouped |>
          mutate(treatment = paste0(treatment,"\u00B0C"))|>
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
@@ -327,7 +338,7 @@ ggplot(global_dat_grouped |>
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   #scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   xlab("Time (hours)")+
-  ylab("Mean speed  (\u03BCm/s)")+
+  ylab("Mean speed  (mm/s)")+
   labs(colour = "Predator treatment") +
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
@@ -339,6 +350,9 @@ ggplot(global_dat_grouped |>
         panel.border = element_rect(fill = NA, colour = "black"))
 
 
+
+####Moprhology analysis with mean values across IDs##################
+require(report)
 bprior_lm_grouped <- c(prior("",class = ar , ub = 1, lb = -1),
                prior(normal(0, 1), class = b),
                prior(exponential(1),class = sd),
@@ -366,6 +380,13 @@ pp_check(brms_lm_grouped,type = "dens_overlay")
 pp_check(brms_lm_grouped,type = "loo_pit_qq")
 
 summary(brms_lm_grouped)
+###Trial for model reporting####
+r <- report(brms_lm_grouped)
+r
+summary(r)
+as.data.frame(r)
+summary(as.data.frame(r))
+
 
 cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "mean_length_um:treatment",
                                                 conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
