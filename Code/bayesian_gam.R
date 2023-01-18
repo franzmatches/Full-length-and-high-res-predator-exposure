@@ -31,7 +31,7 @@ grouped_id_data <- id_data %>%
   summarise(across(c(max_abundance:mean_roundness,mean_speed_norm), ~mean(.x)))
 
 
-
+write.csv(grouped_id_data, file = "Data/grouped_id_data.csv")
 
 ########################################################################################
 ## Speed Analysis
@@ -282,9 +282,12 @@ ggplot(cond_inter_treatment_sub |>
 ## Average across IDs
 ########################################################################################
 group_prior <- c(prior(normal(0, 1), class = b),
-             #prior(lkj(1), class = cor),
+                 # prior(exponential(1), class = Intercept),## we might try this too if we don't want to 
+             #prior(lkj(1), class = cor), '# maybe we need this autorcor 
              prior(normal(0, 2), class = sds),
              prior(exponential(1),class = sigma))
+
+#try with no negative prior brms and check the intercept
 
 brms_group <- brm(bf(mean_speed ~ s(time_point) + 
                   treatment*predator_treatment + 
@@ -304,18 +307,26 @@ brms_group <- brm(bf(mean_speed ~ s(time_point) +
              silent = 0,
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
+#quick plot of the raw data
 ggplot(data = grouped_id_data, aes(x = time_point, y = mean_speed, group = replicate))+
   geom_line()+
   facet_nested_wrap(~treatment*predator_treatment)+
   theme_bw()
 
+
+min(grouped_id_data$mean_speed)
++#save output of the model
 saveRDS(brms_group, file = "Results/brms_group.rds")
+coef(brms_group)
+
+#load output of the model
 brms_group<-readRDS("Results/brms_group.rds")
 
 pp_check(brms_group,type = "dens_overlay")
 pp_check(brms_group,type = "loo_pit_qq")
 
 summary(brms_group)
+prior_summary(brms_group)
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
@@ -340,18 +351,24 @@ ggplot(global_dat_grouped |>
   xlab("Time (hours)")+
   ylab("Mean speed  (mm/s)")+
   labs(colour = "Predator treatment") +
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        strip.text.y.right = element_text(angle = 0),
-        strip.text.x = element_text(face = "bold.italic"),
-        strip.text = element_text(face = "bold"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+  # theme_classic()+
+  # theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+  #       strip.text.y.right = element_text(angle = 0),
+  #       strip.text.x = element_text(face = "bold.italic"),
+  #       strip.text = element_text(face = "bold"),
+  #       panel.background = element_blank(),
+  #       axis.line = element_line(colour = "black"),
+  #       panel.border = element_rect(fill = NA, colour = "black"))+
+  theme_bw()
+
+
+####I think we have a problem with this model becasue it's very strange that the predictions include negative mean speeds!
+#we need to check
 
 
 
-####Moprhology analysis with mean values across IDs##################
+
+####Morphology analysis with mean values across IDs##################
 require(report)
 bprior_lm_grouped <- c(prior("",class = ar , ub = 1, lb = -1),
                prior(normal(0, 1), class = b),
