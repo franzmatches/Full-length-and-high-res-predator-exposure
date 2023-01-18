@@ -397,13 +397,6 @@ pp_check(brms_lm_grouped,type = "dens_overlay")
 pp_check(brms_lm_grouped,type = "loo_pit_qq")
 
 summary(brms_lm_grouped)
-###Trial for model reporting####
-r <- report(brms_lm_grouped)
-r
-summary(r)
-as.data.frame(r)
-summary(as.data.frame(r))
-
 
 cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "mean_length_um:treatment",
                                                 conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
