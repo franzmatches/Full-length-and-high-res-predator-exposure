@@ -283,7 +283,7 @@ ggplot(cond_inter_treatment_sub |>
 ########################################################################################
 group_prior <- c(prior(normal(0, 1), class = b),
                  # prior(exponential(1), class = Intercept),## we might try this to not have negative values in the conf interval for speed
-             #prior(lkj(1), class = cor), # pol suggested we keep this for autocorrelation
+             #prior(lkj(1), class = cor), # pol suggested we keep this for autocorrelation but not with a flat prior
              prior(normal(0, 2), class = sds),
              prior(exponential(1),class = sigma))
 
