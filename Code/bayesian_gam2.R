@@ -284,13 +284,13 @@ ggplot(cond_inter_treatment_sub |>
 ########################################################################################
 group_prior <- c(prior(normal(0, 1), class = b),
                  prior(normal(1,1), class = Intercept),## we might try this to not have negative values in the conf interval for speed
-             # prior(lkj(1), class = ar), # pol suggested we keep this for autocorrelation but not with a flat prior
+             # prior(lkj(1), class = ar), # pol suggested we keep prior for autocorrelation but not with a flat prior
              prior(normal(0, 2), class = sds),
              prior(exponential(1),class = sigma))
 
 #try with no negative prior brms and check the intercept
 
-brms_group <- brm(bf(mean_speed ~ s(time_point) + 
+brms_group2 <- brm(bf(mean_speed ~ s(time_point) + 
                   treatment*predator_treatment + 
                   s(time_point,by = treatment) +
                   s(time_point,by = predator_treatment) +
@@ -317,29 +317,28 @@ ggplot(data = grouped_id_data, aes(x = time_point, y = mean_speed, group = repli
 
 min(grouped_id_data$mean_speed)
 #save output of the model
-saveRDS(brms_group, file = "Results/brms_group.rds")
-saveRDS(brms_group, file = "brms_group_speed_positive_prior.rds")
-coef(brms_group)
+saveRDS(brms_group2, file = "brms_group_speed_positive_prior.rds")
+coef(brms_group2)
 
 #load output of the model
-brms_group<-readRDS("Results/brms_group.rds")
+brms_group2<-readRDS("Results/brms_group_speed_positive_prior.rds")
 
-pp_check(brms_group,type = "dens_overlay")
-pp_check(brms_group,type = "loo_pit_qq")
+pp_check(brms_group2,type = "dens_overlay")
+pp_check(brms_group2,type = "loo_pit_qq")
 
-summary(brms_group)
-prior_summary(brms_group)
+summary(brms_group2)
+prior_summary(brms_group2)
 
-new_dat <- expand.grid(treatment = c(15,25),
+new_dat2 <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
                        time_point = seq(0,24,by=1), replicate = NA, ID = NA) |>
   mutate(treat_inter = interaction(treatment,predator_treatment))
 
-global_dat_grouped <- cbind(new_dat,
-                     predict(brms_group,newdata = new_dat, re_formula =NA))
+global_dat_grouped2 <- cbind(new_dat,
+                     predict(brms_group2,newdata = new_dat, re_formula =NA))
 
 
-ggplot(global_dat_grouped |>
+ggplot(global_dat_grouped2 |>
          mutate(treatment = paste0(treatment,"\u00B0C"))|>
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
