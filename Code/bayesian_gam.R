@@ -282,12 +282,10 @@ ggplot(cond_inter_treatment_sub |>
 ## Average across IDs
 ########################################################################################
 group_prior <- c(prior(normal(0, 1), class = b),
-                 # prior(exponential(1), class = Intercept),## we might try this to not have negative values in the conf interval for speed
-             #prior(lkj(1), class = cor), # pol suggested we keep this for autocorrelation but not with a flat prior
+             #prior(lkj(1), class = cor), 
              prior(normal(0, 2), class = sds),
              prior(exponential(1),class = sigma))
 
-#try with no negative prior brms and check the intercept
 
 brms_group <- brm(bf(mean_speed ~ s(time_point) + 
                   treatment*predator_treatment + 
@@ -314,7 +312,6 @@ ggplot(data = grouped_id_data, aes(x = time_point, y = mean_speed, group = repli
   theme_bw()
 
 
-min(grouped_id_data$mean_speed)
 #save output of the model
 saveRDS(brms_group, file = "Results/brms_group.rds")
 coef(brms_group)
