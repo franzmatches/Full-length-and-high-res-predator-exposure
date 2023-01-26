@@ -282,8 +282,9 @@ ggplot(cond_inter_treatment_sub |>
 ## Average across IDs
 ########################################################################################
 group_prior <- c(prior(normal(0, 1), class = b),
-             #prior(lkj(1), class = cor), 
-             prior(normal(0, 2), class = sds),
+                 prior(exponential(1.5), class = Intercept, lb = 0),
+             prior(normal(0,0.5), class = ar), 
+             prior(exponential(1), class = sds),
              prior(exponential(1),class = sigma))
 
 
@@ -339,39 +340,58 @@ ggplot(global_dat_grouped |>
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
-  geom_line(aes(x = time_point, y=Estimate),col="black") +
+  geom_point(data = grouped_id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x = time_point, y=mean_speed),col="black", alpha = 0.3, shape = 21)+
+  geom_line(data = grouped_id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x = time_point, y=mean_speed,group = replicate),col="black", alpha = 0.3)+
+  geom_line(aes(x = time_point, y=Estimate),col="black",linewidth=1.5) +
   geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(treatment)),alpha=0.3)+
   facet_grid(treatment~predator_treatment, scales = "fixed")+
   #scale_fill_discrete(guide="none")+
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   #scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   xlab("Time (hours)")+
-  ylab("Mean speed  (mm/s)")+
+  ylab("Mean speed (mm/s)")+
   labs(colour = "Predator treatment") +
-  # theme_classic()+
-  # theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-  #       strip.text.y.right = element_text(angle = 0),
-  #       strip.text.x = element_text(face = "bold.italic"),
-  #       strip.text = element_text(face = "bold"),
-  #       panel.background = element_blank(),
-  #       axis.line = element_line(colour = "black"),
-  #       panel.border = element_rect(fill = NA, colour = "black"))+
-  theme_bw()
-
-
-####I think we have a problem with this model becasue it's very strange that the predictions include negative mean speeds!
-#we need to check
-
-
-
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        strip.text = element_text(face = "bold"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
 
 ####Morphology analysis with mean values across IDs##################
-require(report)
-bprior_lm_grouped <- c(prior("",class = ar , ub = 1, lb = -1),
+
+bprior_lm_grouped <- c(prior(normal(0,0.5), class = ar), 
+                       prior(normal(50,10), class = Intercept, lb=0),
                prior(normal(0, 1), class = b),
                prior(exponential(1),class = sd),
                prior(exponential(1),class = sigma))
 
+brms_lm_grouped_prior_chk <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
+                            ar(time = time_point,gr = replicate:treat_inter,p=1)+
+                            (1|replicate)),
+                       data = grouped_id_data,
+                       family = gaussian(), 
+                       prior = bprior_lm_grouped,
+                       chains = 4, 
+                       thin =0.0005*10000,
+                       cores = 4, 
+                       iter = 2000, 
+                       warmup = 1000, 
+                       silent = 0,
+                       sample_prior = "only",
+                       control=list(adapt_delta=0.975,max_treedepth = 20))
+
+pp_check(brms_lm_grouped_prior_chk,type = "bars")
 
 brms_lm_grouped <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
                     ar(time = time_point,gr = replicate:treat_inter,p=1)+
@@ -391,9 +411,9 @@ saveRDS(brms_lm_grouped, file = "Results/brms_lm_grouped.rds")
 brms_lm_grouped <- readRDS("Results/brms_lm_grouped.rds")
 
 pp_check(brms_lm_grouped,type = "dens_overlay")
-pp_check(brms_lm_grouped,type = "loo_pit_qq")
 
 summary(brms_lm_grouped)
+bayestestR::describe_posterior(brms_lm_grouped, ci = 0.95, test="none")
 
 cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "mean_length_um:treatment",
                                                 conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
@@ -403,8 +423,15 @@ cond_inter_treatment_grouped <- conditional_effects(brms_lm_grouped,effects = "m
 
 ggplot(cond_inter_treatment_grouped |>
          mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
-         mutate(effect2__ = paste0(effect2__,"\u00B0C"))|>
+         mutate(effect2__ = paste0(effect2__,"\u00B0C")) |>
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_point(data = grouped_id_data |>
+               ungroup()|>
+                dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) |>
+               mutate(effect2__ = paste0(treatment,"\u00B0C")) |>
+               filter(time_point %in% c(0,8,16,24)) |>
+               mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h"))),
+             aes(x=mean_length_um,y=mean_width_um,col=as.factor(effect2__)), alpha = 0.4)+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
   geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
   facet_grid(cond__~predator_treatment, scales = "fixed") +
@@ -420,4 +447,3 @@ ggplot(cond_inter_treatment_grouped |>
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
-
