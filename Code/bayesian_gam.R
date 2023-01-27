@@ -4,9 +4,25 @@ require(tidyverse)
 require(bestNormalize)
 require(ggh4x)
 
-did_id_data <- read.csv("Data/did_data_IDs_corrected_max_abundance.csv")
-hom_id_data <- read.csv("Data/hom_data_IDs_corrected_max_abundance.csv")
-prey_id_data <- read.csv("Data/prey_data_IDs_correct_max_abundance.csv")
+#load heavy csv present in Francesco's local folder
+
+# did_id_data <- read.csv("Data/didinium_data_IDs_clean.csv")
+# hom_id_data <- read.csv("Data/homalozoon_data_IDs_clean.csv")
+# prey_id_data <- read.csv("Data/prey_data_IDs_clean.csv")
+
+#create RData files to be compressed and pushed in the GitHub and loaded from other people
+saveRDS(did_id_data, file = "Data/didinium_data_IDs_clean.RData")
+saveRDS(hom_id_data, file = "Data/homalozoon_data_IDs_clean.RData")
+saveRDS(prey_id_data, file = "Data/prey_data_IDs_clean.RData")
+
+
+#load those files for analysis
+did_id_data <- load("Data/didinium_data_IDs_clean.RData")
+hom_id_data <- load("Data/homalozoon_data_IDs_clean.RData")
+prey_id_data <- load("Data/prey_data_IDs_clean.RData")
+
+
+
 
 #add predator treatment column to each then combine data frames
 did_id_data <- did_id_data %>%
