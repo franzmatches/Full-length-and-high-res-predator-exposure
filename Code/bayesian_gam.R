@@ -11,15 +11,15 @@ require(ggh4x)
 # prey_id_data <- read.csv("Data/prey_data_IDs_clean.csv")
 
 #create RData files to be compressed and pushed in the GitHub and loaded from other people
-saveRDS(did_id_data, file = "Data/didinium_data_IDs_clean.RData")
-saveRDS(hom_id_data, file = "Data/homalozoon_data_IDs_clean.RData")
-saveRDS(prey_id_data, file = "Data/prey_data_IDs_clean.RData")
-
+# saveRDS(did_id_data, file = "Data/didinium_data_IDs_clean.RData")
+# saveRDS(hom_id_data, file = "Data/homalozoon_data_IDs_clean.RData")
+# saveRDS(prey_id_data, file = "Data/prey_data_IDs_clean.RData")
+# 
 
 #load those files for analysis
-did_id_data <- load("Data/didinium_data_IDs_clean.RData")
-hom_id_data <- load("Data/homalozoon_data_IDs_clean.RData")
-prey_id_data <- load("Data/prey_data_IDs_clean.RData")
+did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RData")
+hom_id_data <- readRDS(file = "Data/homalozoon_data_IDs_clean.RData")
+prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RData")
 
 
 
@@ -35,16 +35,26 @@ prey_id_data <- prey_id_data %>%
   mutate(predator_treatment = "prey")
 
 #combine the data frames
-id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
+
+#this dataframe still has the abundances and data for the didiniums and homalozoon present
+id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
   #set prey as the first factor for data analysis
   mutate(predator_treatment = factor(predator_treatment, levels = c("prey", "didinium", "homalozoon")))%>%
-  mutate(mean_speed_norm = predict(bestNormalize::bestNormalize(mean_speed)),
+  mutate(
+    # mean_speed_norm = predict(bestNormalize::bestNormalize(mean_speed)), we dont need to normalize
          treatment = factor(treatment, levels = c(15,25)),
          treat_inter = as.factor(interaction(treatment,predator_treatment)))
 
+# this dataframe will contain just the parameciums, so equivalent of our previous data
+id_data<-id_data_with_predators %>% filter(Species == "PARcau")
+
+
+#let's fo at the replicate level and have average values of all the variables 
 grouped_id_data <- id_data %>% 
   group_by(treatment,predator_treatment,replicate,treat_inter,time_point) %>%
-  summarise(across(c(max_abundance:mean_roundness,mean_speed_norm), ~mean(.x)))
+  summarise(across(c(max_abundance:mean_speed), ~mean(.x))) 
+
+#from here Duncan's data should work with both "id_data" and "grouped_id_data"
 
 
 write.csv(grouped_id_data, file = "Data/grouped_id_data.csv")
