@@ -25,6 +25,7 @@ ggplot(data = did_id_data %>% filter(Species == "PARcau") %>% group_by(time_poin
   geom_point()+
   geom_line()+
   facet_wrap(~treatment*replicate)+
+  ggtitle("Didinium")+
   theme_bw()
 
 #homalozoon
@@ -38,6 +39,7 @@ ggplot(data = hom_id_data %>% filter(Species == "PARcau") %>% group_by(time_poin
   geom_point()+
   geom_line()+
   facet_wrap(~treatment*replicate)+
+  ggtitle("Homalozoon")+
   theme_bw()
 
 #prey
@@ -51,6 +53,7 @@ ggplot(data = prey_id_data %>% filter(Species == "PARcau") %>% group_by(time_poi
   geom_point()+
   geom_line()+
   facet_wrap(~treatment*replicate)+
+  ggtitle("Control")+
   theme_bw()
 
 
@@ -74,7 +77,7 @@ ggplot(data = id_data %>% group_by(time_point, treat_inter, replicate) %>% summa
        aes(x = time_point, y = max_abundance))+
   geom_point()+
   geom_line()+
-  facet_nested_wrap(~replicate*treat_inter)+
+  facet_wrap(~treat_inter*replicate)+
   theme_bw()
 
 #let's fo at the replicate level and have average values of all the variables 
