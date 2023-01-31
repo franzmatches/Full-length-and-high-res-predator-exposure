@@ -4,35 +4,55 @@ require(tidyverse)
 require(bestNormalize)
 require(ggh4x)
 
-#load heavy csv present in Francesco's local folder
 
-# did_id_data <- read.csv("Data/didinium_data_IDs_clean.csv")
-# hom_id_data <- read.csv("Data/homalozoon_data_IDs_clean.csv")
-# prey_id_data <- read.csv("Data/prey_data_IDs_clean.csv")
-
-#create RData files to be compressed and pushed in the GitHub and loaded from other people
-# saveRDS(did_id_data, file = "Data/didinium_data_IDs_clean.RData")
-# saveRDS(hom_id_data, file = "Data/homalozoon_data_IDs_clean.RData")
-# saveRDS(prey_id_data, file = "Data/prey_data_IDs_clean.RData")
-# 
-
-#load those files for analysis
-did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RData")
-hom_id_data <- readRDS(file = "Data/homalozoon_data_IDs_clean.RData")
-prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RData")
+#load data for analysis
+did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RDS")
+hom_id_data <- readRDS(file = "Data/homalozoon_data_IDs_clean.RDS")
+prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RDS")
 
 
 
 
-#add predator treatment column to each then combine data frames
+##add predator treatment column to each then combine data frames
+#didinium
 did_id_data <- did_id_data %>%
   mutate(predator_treatment = "didinium")
 
+#plot to see replicates with strange behaviour 
+ggplot(data = did_id_data %>% filter(Species == "PARcau") %>% group_by(time_point, replicate, treatment) %>% 
+         summarise(max_abundance = unique(max_abundance)),
+       aes(x = time_point, y = max_abundance))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~treatment*replicate)+
+  theme_bw()
+
+#homalozoon
 hom_id_data <- hom_id_data %>%
   mutate(predator_treatment = "homalozoon")
 
+#plot to see replicates with strange behaviour 
+ggplot(data = hom_id_data %>% filter(Species == "PARcau") %>% group_by(time_point, replicate, treatment) %>% 
+         summarise(max_abundance = unique(max_abundance)),
+       aes(x = time_point, y = max_abundance))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~treatment*replicate)+
+  theme_bw()
+
+#prey
 prey_id_data <- prey_id_data %>%
   mutate(predator_treatment = "prey")
+
+#plot to see replicates with strange behaviour 
+ggplot(data = prey_id_data %>% filter(Species == "PARcau") %>% group_by(time_point, replicate, treatment) %>% 
+         summarise(max_abundance = unique(max_abundance)),
+       aes(x = time_point, y = max_abundance))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~treatment*replicate)+
+  theme_bw()
+
 
 #combine the data frames
 
@@ -48,6 +68,14 @@ id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
 # this dataframe will contain just the parameciums, so equivalent of our previous data
 id_data<-id_data_with_predators %>% filter(Species == "PARcau")
 
+##let's plot to see where which replicate have strange data
+
+ggplot(data = id_data %>% group_by(time_point, treat_inter, replicate) %>% summarise(max_abundance = unique(max_abundance)),
+       aes(x = time_point, y = max_abundance))+
+  geom_point()+
+  geom_line()+
+  facet_nested_wrap(~replicate*treat_inter)+
+  theme_bw()
 
 #let's fo at the replicate level and have average values of all the variables 
 grouped_id_data <- id_data %>% 
