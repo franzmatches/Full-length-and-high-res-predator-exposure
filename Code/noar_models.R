@@ -4,9 +4,9 @@ require(tidyverse)
 require(bestNormalize)
 require(ggh4x)
 
-did_id_data <- read.csv("Data/did_data_IDs_corrected_max_abundance.csv")
-hom_id_data <- read.csv("Data/hom_data_IDs_corrected_max_abundance.csv")
-prey_id_data <- read.csv("Data/prey_data_IDs_correct_max_abundance.csv")
+did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RDS")
+hom_id_data <- readRDS(file = "Data/homalozoon_data_IDs_clean.RDS")
+prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RDS")
 
 #add predator treatment column to each then combine data frames
 did_id_data <- did_id_data %>%
@@ -19,24 +19,29 @@ prey_id_data <- prey_id_data %>%
   mutate(predator_treatment = "prey")
 
 #combine the data frames
-id_data <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
+id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
   #set prey as the first factor for data analysis
   mutate(predator_treatment = factor(predator_treatment, levels = c("prey", "didinium", "homalozoon")))%>%
-  mutate(mean_speed_norm = predict(bestNormalize::bestNormalize(mean_speed)),
-         treatment = factor(treatment, levels = c(15,25)),
-         treat_inter = as.factor(interaction(treatment,predator_treatment)))
+  mutate(
+    # mean_speed_norm = predict(bestNormalize::bestNormalize(mean_speed)), we dont need to normalize
+    treatment = factor(treatment, levels = c(15,25)),
+    treat_inter = as.factor(interaction(treatment,predator_treatment)))
+
+id_data<-id_data_with_predators %>% filter(Species == "PARcau")
 
 
 id_speed_prior <- c(prior(normal(0, 1), class = b),
                  prior(exponential(1.5), class = Intercept, lb = 0),
-                 prior(exponential(1), class = sds))
+                 prior(exponential(1), class = sds),
+                 prior(exponential(1),class = sigma))
 
 
 brms_id <- brm(bf(mean_speed ~ s(time_point) + 
                        treatment*predator_treatment + 
                        s(time_point,by = treatment) +
                        s(time_point,by = predator_treatment) +
-                       s(time_point,by = treat_inter)),
+                       s(time_point,by = treat_inter) +
+                    (1|replicate)),
                   data = id_data,
                   family = gaussian(), 
                   prior = id_speed_prior,
@@ -87,9 +92,11 @@ ggplot(global_dat_grouped |>
 
 bprior_lm_id <- c(prior(normal(50,10), class = Intercept, lb=0),
                        prior(normal(0, 1), class = b),
-                       prior(exponential(1),class = sd))
+                       prior(exponential(1),class = sd),
+                  prior(exponential(1),class = sigma))
 
-brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment),
+brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment +
+                      (1|replicate)),
                        data = id_data,
                        family = gaussian(), 
                        prior = bprior_lm_id,
