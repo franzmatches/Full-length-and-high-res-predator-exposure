@@ -27,31 +27,56 @@ id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
     treatment = factor(treatment, levels = c(15,25)),
     treat_inter = as.factor(interaction(treatment,predator_treatment)))
 
-id_data<-id_data_with_predators %>% filter(Species == "PARcau")
+id_data<-id_data_with_predators %>% filter(Species == "PARcau") |>
+  group_by(ID,treat_inter,replicate,time_point) |>
+  slice_head()
+
+ggplot(id_data|> group_by(treat_inter,replicate,time_point) |> 
+         summarise(num_IDs = max(length(unique(ID)))),
+       aes(x=time_point,num_IDs)) +
+  geom_point()+
+  geom_line()+
+  facet_wrap(~treat_inter*replicate)+
+  theme_bw()
 
 
+###################################################################################
+# Weibull model
+###################################################################################
 id_speed_prior <- c(prior(normal(0, 1), class = b),
-                 prior(exponential(1.5), class = Intercept, lb = 0),
-                 prior(exponential(1), class = sds),
-                 prior(exponential(1),class = sigma))
+                 prior(exponential(1), class = Intercept, lb = 0),
+                 prior(exponential(1), class = sd),
+                 prior(exponential(1), class = sds)
+                 ,prior(gamma(0.01,0.01),class=shape)
+                 #,prior(exponential(1),class = sigma)
+                 )
 
 
-brms_id <- brm(bf(mean_speed ~ s(time_point) + 
+brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=-1) + 
                        treatment*predator_treatment + 
-                       s(time_point,by = treatment) +
-                       s(time_point,by = predator_treatment) +
-                       s(time_point,by = treat_inter) +
+                       s(time_point,by = treatment,k=-1) +
+                       s(time_point,by = predator_treatment,k=-1) +
+                       s(time_point,by = treat_inter,k=-1) +
                     (1|replicate)),
                   data = id_data,
-                  family = gaussian(), 
+                  family = weibull(), #exgaussian/shifted_lognormal/lognormal
                   prior = id_speed_prior,
-                  chains = 4, 
+                  chains = 3, 
                   thin =0.0005*10000,
-                  cores = 4, 
-                  iter = 2000, 
-                  warmup = 1000, 
-                  silent = 0,
-                  control=list(adapt_delta=0.975,max_treedepth = 20))
+                  cores = 3, 
+                  backend = "cmdstanr", 
+                  threads = threading(2),
+               iter = 500, 
+               warmup = 100, 
+               refresh = 50,
+                  control=list(adapt_delta=0.975,max_treedepth = 20),
+               silent = 0)
+
+saveRDS(brms_id_weibull, file = "Results/brms_id_noar_weibull.rds")
+brms_id_weibull <- readRDS(file = "Results/brms_id_noar_weibull.rds")
+
+loo(brms_id_weibull) #22190.3
+pp_check(brms_id_weibull,type = "hist")
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
@@ -59,15 +84,15 @@ new_dat <- expand.grid(treatment = c(15,25),
   mutate(treat_inter = interaction(treatment,predator_treatment))
 
 global_dat_id <- cbind(new_dat,
-                            predict(brms_id,newdata = new_dat, re_formula =NA))
+                            predict(brms_id_weibull,newdata = new_dat, re_formula =NA))
 
 
-ggplot(global_dat_grouped |>
+ggplot(global_dat_id |>
          mutate(treatment = paste0(treatment,"\u00B0C"))|>
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
-  geom_point(data = grouped_id_data |>
+  geom_point(data = id_data |>
                ungroup()|>
                mutate(treatment = paste0(treatment,"\u00B0C"))|>
                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
@@ -90,6 +115,153 @@ ggplot(global_dat_grouped |>
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
 
+
+
+cond_speed_treatment_id <- conditional_effects(brms_id_weibull,
+                                               effects = "time_point",
+                                               #method = "posterior_predict",
+                                               method = "posterior_epred",
+                                               conditions = (data.frame(expand.grid(treatment = c(15,25),
+                                                                                    #time_point = seq(from = 0,to=24,by=1),
+                                                                                    predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                               mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
+
+ggplot(cond_speed_treatment_id |>
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_point(data = id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
+  geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
+  geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.3)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+###################################################################################
+# Gamma speed model
+###################################################################################
+id_speed_prior <- c(prior(normal(0, 1), class = b),
+                    prior(exponential(1.5), class = Intercept, lb = 0),
+                    prior(exponential(1), class = sds),
+                    prior(exponential(1),class = sd)
+                    ,prior(gamma(0.01,0.01),class=shape)
+                    #,prior(exponential(1),class = sigma)
+)
+
+
+brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=-1) + 
+                          treatment*predator_treatment + 
+                          s(time_point,by = treatment,k=-1) +
+                          s(time_point,by = predator_treatment,k=-1) +
+                          s(time_point,by = treat_inter,k=-1) +
+                          (1|replicate)),
+                     data = id_data,
+                     family = Gamma(), 
+                     prior = id_speed_prior,
+                     chains = 4,
+                     cores = 4, 
+                     backend = "cmdstanr", 
+                     threads = threading(2),
+                     thin =0.0005*10000,
+                     iter = 5000, 
+                     warmup = 1000, 
+                     refresh = 200,
+                     silent = 0
+                     ,control=list(adapt_delta=0.975,max_treedepth = 20)
+)
+saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gamma.rds")
+
+brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
+
+loo(brms_id_gamma)
+pp_check(brms_id_gamma,type = "hist")
+
+new_dat <- expand.grid(treatment = c(15,25),
+                       predator_treatment = c("prey","didinium","homalozoon"),
+                       time_point = seq(0,24,by=1)) |>
+  mutate(treat_inter = interaction(treatment,predator_treatment))
+
+global_dat_id <- cbind(new_dat,
+                       predict(brms_id_gamma,newdata = new_dat, re_formula =NA))
+
+
+ggplot(global_dat_id |>
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
+  #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
+  geom_point(data = id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x = time_point, y=mean_speed),col="black", alpha = 0.3, shape = 21)+
+  geom_line(aes(x = time_point, y=Estimate),col="black",linewidth=1.5) +
+  geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(treatment)),alpha=0.3)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  #scale_fill_discrete(guide="none")+
+  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  #scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  xlab("Time (hours)")+
+  ylab("Mean speed (mm/s)")+
+  labs(colour = "Predator treatment") +
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        strip.text = element_text(face = "bold"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+
+cond_speed_treatment_id <- conditional_effects(brms_id_gamma,
+                                               effects = "time_point",
+                                               #method = "posterior_predict",
+                                               method = "posterior_epred",
+                                               conditions = (data.frame(expand.grid(treatment = c(15,25),
+                                                                                    #time_point = seq(from = 0,to=24,by=1),
+                                                                                    predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                               mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
+
+ggplot(cond_speed_treatment_id |>
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_point(data = id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
+  geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
+  geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.3)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+###################################################################################
+# Morphology model
+###################################################################################
+
 bprior_lm_id <- c(prior(normal(50,10), class = Intercept, lb=0),
                        prior(normal(0, 1), class = b),
                        prior(exponential(1),class = sd),
@@ -103,12 +275,14 @@ brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator
                        chains = 4, 
                        thin =0.0005*10000,
                        cores = 4, 
-                       iter = 2000, 
-                       warmup = 1000, 
+                       iter = 10000, 
+                       warmup = 2000, 
                        silent = 0,
                        control=list(adapt_delta=0.975,max_treedepth = 20))
 
-                 
+     
+saveRDS(brms_lm_id, file = "Results/brms_lm_id_noar.rds")
+
 cond_inter_treatment_id<- conditional_effects(brms_lm_id,effects = "mean_length_um:treatment",
                                                     conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
                                                                                         predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
