@@ -433,19 +433,22 @@ bprior_lm_grouped <- c(prior(normal(0,0.5), class = ar),
                prior(exponential(1),class = sd),
                prior(exponential(1),class = sigma))
 
-brms_lm_grouped_prior_chk <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
-                            ar(time = time_point,gr = replicate:treat_inter,p=1)+
-                            (1|replicate)),
+bprior_lm_grouped_no_ar <- c(prior(normal(50,10), class = Intercept, lb=0),
+                       prior(normal(0, 1), class = b),
+                       prior(exponential(1),class = sd),
+                       prior(exponential(1),class = sigma))
+
+brms_lm_grouped_prior_no_ar <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment+
+                                        (1|replicate)),
                        data = grouped_id_data,
                        family = gaussian(), 
-                       prior = bprior_lm_grouped,
+                       prior = bprior_lm_grouped_no_ar,
                        chains = 4, 
                        thin =0.0005*10000,
                        cores = 4, 
                        iter = 2000, 
                        warmup = 1000, 
-                       silent = 0,
-                       sample_prior = "only",
+                       # silent = 0,
                        control=list(adapt_delta=0.975,max_treedepth = 20))
 
 pp_check(brms_lm_grouped_prior_chk,type = "bars")
