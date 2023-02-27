@@ -44,36 +44,37 @@ ggplot(id_data|> group_by(treat_inter,replicate,time_point) |>
 # Weibull model
 ###################################################################################
 id_speed_prior <- c(prior(normal(0, 1), class = b),
-                 prior(exponential(1), class = Intercept, lb = 0),
-                 prior(exponential(1), class = sd),
-                 prior(exponential(1), class = sds)
-                 ,prior(gamma(0.01,0.01),class=shape)
-                 #,prior(exponential(1),class = sigma)
-                 )
+                    prior(exponential(1), class = Intercept, lb = 0),
+                    prior(exponential(1), class = sd),
+                    prior(exponential(1), class = sds)
+                    ,prior(gamma(0.01,0.01),class=shape)
+                    #,prior(exponential(1),class = sigma)
+)
 
 
 brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=8) + 
-                       treatment*predator_treatment + 
-                       s(time_point,by = treatment,k=8) +
-                       s(time_point,by = predator_treatment,k=8) +
-                       s(time_point,by = treat_inter,k=8) +
-                    (1|replicate)),
-                  data = id_data,
-                  family = weibull(link = "identity"), #exgaussian/shifted_lognormal/lognormal
-                  prior = id_speed_prior,
-                  chains = 4, 
-                  thin =0.0005*10000,
-                  cores = 4, 
-                  backend = "cmdstanr", 
-                  threads = threading(2),
-               iter = 5000, 
-               warmup = 2000, 
-               refresh = 50,
-                  control=list(adapt_delta=0.99,max_treedepth = 20),
-               silent = 0)
+                            treatment*predator_treatment + 
+                            s(time_point,by = treatment,k=8) +
+                            s(time_point,by = predator_treatment,k=8) +
+                            s(time_point,by = treat_inter,k=8) +
+                            (1|replicate)),
+                       data = id_data,
+                       family = weibull(link = "identity"), #exgaussian/shifted_lognormal/lognormal
+                       prior = id_speed_prior,
+                       chains = 4, 
+                       thin =0.0005*10000,
+                       cores = 4, 
+                       backend = "cmdstanr", 
+                       threads = threading(2),
+                       iter = 5000, 
+                       warmup = 2000, 
+                       refresh = 50,
+                       control=list(adapt_delta=0.99,max_treedepth = 20),
+                       silent = 0)
 
 saveRDS(brms_id_weibull, file = "Results/brms_id_noar_weibull.rds")
 brms_id_weibull <- readRDS(file = "Results/brms_id_noar_weibull.rds")
+
 
 #summary information
 loo::loo(brms_id_weibull) #analogous to AIC 21682.0
@@ -88,7 +89,7 @@ new_dat <- expand.grid(treatment = c(15,25),
   mutate(treat_inter = interaction(treatment,predator_treatment))
 
 global_dat_id <- cbind(new_dat,
-                            predict(brms_id_weibull,newdata = new_dat, re_formula =NA))
+                       predict(brms_id_weibull,newdata = new_dat, re_formula =NA))
 
 
 ggplot(global_dat_id |>
@@ -121,14 +122,14 @@ ggplot(global_dat_id |>
 
 
 
-cond_speed_treatment_id <- conditional_effects(brms_id_weibull,
-                                               effects = "time_point",
-                                               #method = "posterior_predict",
-                                               method = "posterior_epred",
-                                               conditions = (data.frame(expand.grid(treatment = c(15,25),
-                                                                                    #time_point = seq(from = 0,to=24,by=1),
-                                                                                    predator_treatment =  c("prey","didinium","homalozoon"))) |>
-                                                               mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
+cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibull,
+                                                     effects = "time_point",
+                                                     #method = "posterior_predict",
+                                                     method = "posterior_epred",
+                                                     conditions = (data.frame(expand.grid(treatment = c(15,25),
+                                                                                          #time_point = seq(from = 0,to=24,by=1),
+                                                                                          predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                                     mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
 
 ggplot(cond_speed_treatment_id |>
          mutate(treatment = paste0(treatment,"\u00B0C"))|>
@@ -188,7 +189,7 @@ saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gamma.rds")
 brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
 
 #summary information
-loo::loo(brms_id_gamma) #analogous to AIC 24081.0
+loo::loo(brms_id_gamma) #analogous to AIC 22190.3
 pp_check(brms_id_gamma) #predicted values vs observed (density plot)
 pp_check(brms_id_gamma,type = "hist") #predicted values vs observed (histogram)
 summary(brms_id_gamma) #full summary table
@@ -270,29 +271,29 @@ ggplot(cond_speed_treatment_id |>
 ###################################################################################
 
 bprior_lm_id <- c(prior(normal(50,10), class = Intercept, lb=0),
-                       prior(normal(0, 1), class = b),
-                       prior(exponential(1),class = sd),
+                  prior(normal(0, 1), class = b),
+                  prior(exponential(1),class = sd),
                   prior(exponential(1),class = sigma))
 
 brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator_treatment +
                       (1|replicate)),
-                       data = id_data,
-                       family = gaussian(), 
-                       prior = bprior_lm_id,
-                       chains = 4, 
-                       thin =0.0005*10000,
-                       cores = 4, 
-                       iter = 10000, 
-                       warmup = 2000, 
-                       silent = 0,
-                       control=list(adapt_delta=0.975,max_treedepth = 20))
+                 data = id_data,
+                 family = gaussian(), 
+                 prior = bprior_lm_id,
+                 chains = 4, 
+                 thin =0.0005*10000,
+                 cores = 4, 
+                 iter = 10000, 
+                 warmup = 2000, 
+                 silent = 0,
+                 control=list(adapt_delta=0.975,max_treedepth = 20))
 
-     
+
 saveRDS(brms_lm_id, file = "Results/brms_lm_id_noar.rds")
 
 cond_inter_treatment_id<- conditional_effects(brms_lm_id,effects = "mean_length_um:treatment",
-                                                    conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
-                                                                                        predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
+                                              conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
+                                                                                  predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
   mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
          effect = "interaction")
 
