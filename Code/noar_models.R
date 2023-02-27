@@ -76,7 +76,7 @@ saveRDS(brms_id_weibull, file = "Results/brms_id_noar_weibull.rds")
 brms_id_weibull <- readRDS(file = "Results/brms_id_noar_weibull.rds")
 
 #summary information
-loo::loo(brms_id_weibull) #analogous to AIC 22190.3
+loo::loo(brms_id_weibull) #analogous to AIC 21682.0
 pp_check(brms_id_weibull) #predicted values vs observed (density plot)
 pp_check(brms_id_weibull,type = "hist") #predicted values vs observed (histogram)
 summary(brms_id_weibull) #full summary table
@@ -188,7 +188,7 @@ saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gamma.rds")
 brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
 
 #summary information
-loo::loo(brms_id_gamma) #analogous to AIC 22190.3
+loo::loo(brms_id_gamma) #analogous to AIC 24081.0
 pp_check(brms_id_gamma) #predicted values vs observed (density plot)
 pp_check(brms_id_gamma,type = "hist") #predicted values vs observed (histogram)
 summary(brms_id_gamma) #full summary table
