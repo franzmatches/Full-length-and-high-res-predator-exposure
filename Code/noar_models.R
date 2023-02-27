@@ -52,31 +52,35 @@ id_speed_prior <- c(prior(normal(0, 1), class = b),
                  )
 
 
-brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=-1) + 
+brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=8) + 
                        treatment*predator_treatment + 
-                       s(time_point,by = treatment,k=-1) +
-                       s(time_point,by = predator_treatment,k=-1) +
-                       s(time_point,by = treat_inter,k=-1) +
+                       s(time_point,by = treatment,k=8) +
+                       s(time_point,by = predator_treatment,k=8) +
+                       s(time_point,by = treat_inter,k=8) +
                     (1|replicate)),
                   data = id_data,
-                  family = weibull(), #exgaussian/shifted_lognormal/lognormal
+                  family = weibull(link = "identity"), #exgaussian/shifted_lognormal/lognormal
                   prior = id_speed_prior,
-                  chains = 3, 
+                  chains = 4, 
                   thin =0.0005*10000,
-                  cores = 3, 
+                  cores = 4, 
                   backend = "cmdstanr", 
                   threads = threading(2),
-               iter = 500, 
-               warmup = 100, 
+               iter = 5000, 
+               warmup = 2000, 
                refresh = 50,
-                  control=list(adapt_delta=0.975,max_treedepth = 20),
+                  control=list(adapt_delta=0.99,max_treedepth = 20),
                silent = 0)
 
 saveRDS(brms_id_weibull, file = "Results/brms_id_noar_weibull.rds")
 brms_id_weibull <- readRDS(file = "Results/brms_id_noar_weibull.rds")
 
-loo(brms_id_weibull) #22190.3
-pp_check(brms_id_weibull,type = "hist")
+#summary information
+loo::loo(brms_id_weibull) #analogous to AIC 22190.3
+pp_check(brms_id_weibull) #predicted values vs observed (density plot)
+pp_check(brms_id_weibull,type = "hist") #predicted values vs observed (histogram)
+summary(brms_id_weibull) #full summary table
+bayestestR::describe_posterior(brms_id_weibull, ci = 0.95, test="none") #streamlined summary table (for supplementary)
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
@@ -160,11 +164,11 @@ id_speed_prior <- c(prior(normal(0, 1), class = b),
 )
 
 
-brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=-1) + 
+brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=5) + 
                           treatment*predator_treatment + 
-                          s(time_point,by = treatment,k=-1) +
-                          s(time_point,by = predator_treatment,k=-1) +
-                          s(time_point,by = treat_inter,k=-1) +
+                          s(time_point,by = treatment,k=5) +
+                          s(time_point,by = predator_treatment,k=5) +
+                          s(time_point,by = treat_inter,k=5) +
                           (1|replicate)),
                      data = id_data,
                      family = Gamma(), 
@@ -181,11 +185,14 @@ brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=-1) +
                      ,control=list(adapt_delta=0.975,max_treedepth = 20)
 )
 saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gamma.rds")
-
 brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
 
-loo(brms_id_gamma)
-pp_check(brms_id_gamma,type = "hist")
+#summary information
+loo::loo(brms_id_gamma) #analogous to AIC 22190.3
+pp_check(brms_id_gamma) #predicted values vs observed (density plot)
+pp_check(brms_id_gamma,type = "hist") #predicted values vs observed (histogram)
+summary(brms_id_gamma) #full summary table
+bayestestR::describe_posterior(brms_id_gamma, ci = 0.95, test="none") #streamlined summary table (for supplementary)
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
