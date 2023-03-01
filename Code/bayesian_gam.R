@@ -378,7 +378,7 @@ coef(brms_group)
 brms_group<-readRDS("Results/brms_group.rds")
 
 pp_check(brms_group,type = "dens_overlay")
-pp_check(brms_group,type = "loo_pit_qq")
+pp_check(brms_group,type = "hist")
 
 summary(brms_group)
 prior_summary(brms_group)
@@ -424,6 +424,47 @@ ggplot(global_dat_grouped |>
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
+
+
+
+cond_speed_treatment_grouped <- brms::conditional_effects(brms_group,
+                                                          effects = "time_point",
+                                                          #method = "posterior_predict",
+                                                          method = "posterior_epred",
+                                                          conditions = (data.frame(expand.grid(treatment = c(15,25),
+                                                                                               #time_point = seq(from = 0,to=24,by=1),
+                                                                                               predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                                          mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
+
+ggplot(cond_speed_treatment_grouped |>
+         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_point(data = grouped_id_data |>
+               ungroup()|>
+               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+               mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+             aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
+  geom_line(data = grouped_id_data |>
+              ungroup()|>
+              mutate(treatment = paste0(treatment,"\u00B0C"))|>
+              mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+            aes(x = time_point, y=mean_speed,group = replicate),col="black", alpha = 0.3)+
+  geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
+  geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.3)+
+  facet_grid(treatment~predator_treatment, scales = "fixed")+
+  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+
 
 ####Morphology analysis with mean values across IDs##################
 

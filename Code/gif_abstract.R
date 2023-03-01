@@ -141,7 +141,7 @@ camcorder::gg_record(
   dpi = 300       # dpi to use when saving image
 )
 
-for(i in unique(cond_inter_treatment_noar$time_point)){
+for(i in 0:24){
   print(
     ggplot(cond_inter_treatment_noar |>
              filter(time_point == i) |>
