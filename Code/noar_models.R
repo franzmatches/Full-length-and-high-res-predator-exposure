@@ -52,11 +52,11 @@ id_speed_prior <- c(prior(normal(0, 1), class = b),
 )
 
 
-brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=8) + 
+brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=-1) + 
                             treatment*predator_treatment + 
-                            s(time_point,by = treatment,k=8) +
-                            s(time_point,by = predator_treatment,k=8) +
-                            s(time_point,by = treat_inter,k=8) +
+                            s(time_point,by = treatment,k=-1) +
+                            s(time_point,by = predator_treatment,k=-1) +
+                            s(time_point,by = treat_inter,k=-1) +
                             (1|replicate)),
                        data = id_data,
                        family = weibull(link = "identity"), #exgaussian/shifted_lognormal/lognormal
@@ -69,12 +69,21 @@ brms_id_weibull <- brm(bf(mean_speed ~ s(time_point,k=8) +
                        iter = 5000, 
                        warmup = 2000, 
                        refresh = 50,
-                       control=list(adapt_delta=0.99,max_treedepth = 20),
+                       control=list(adapt_delta=0.985,max_treedepth = 20),
                        silent = 0)
 
 saveRDS(brms_id_weibull, file = "Results/brms_id_noar_weibull.rds")
 brms_id_weibull <- readRDS(file = "Results/brms_id_noar_weibull.rds")
+brms_id_weibullk5 <- readRDS(file = "Results/brms_id_noar_weibullk5.rds")
+brms_id_weibullk8 <- readRDS(file = "Results/brms_id_noar_weibullk8.rds")
 
+loo::loo(brms_id_weibull) #21682.5
+loo::loo(brms_id_weibullk5) #22208.8
+loo::loo(brms_id_weibullk8) #21838.6
+
+pp_check(brms_id_weibull,type = "hist")
+pp_check(brms_id_weibullk5,type = "hist")
+pp_check(brms_id_weibullk8,type = "hist")
 
 #summary information
 loo::loo(brms_id_weibull) #analogous to AIC 21682.0
@@ -145,6 +154,8 @@ ggplot(cond_speed_treatment_id |>
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   theme_classic()+
+  xlab("Time (hours)")+
+  ylab("Mean speed (mm/s)")+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text = element_text(face = "bold"),
         strip.text.y.right = element_text(angle = 0),
@@ -165,11 +176,11 @@ id_speed_prior <- c(prior(normal(0, 1), class = b),
 )
 
 
-brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=5) + 
+brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=8) + 
                           treatment*predator_treatment + 
-                          s(time_point,by = treatment,k=5) +
-                          s(time_point,by = predator_treatment,k=5) +
-                          s(time_point,by = treat_inter,k=5) +
+                          s(time_point,by = treatment,k=8) +
+                          s(time_point,by = predator_treatment,k=8) +
+                          s(time_point,by = treat_inter,k=8) +
                           (1|replicate)),
                      data = id_data,
                      family = Gamma(), 
@@ -180,12 +191,12 @@ brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=5) +
                      threads = threading(2),
                      thin =0.0005*10000,
                      iter = 5000, 
-                     warmup = 1000, 
-                     refresh = 200,
+                     warmup = 2000, 
+                     refresh = 50,
                      silent = 0
-                     ,control=list(adapt_delta=0.975,max_treedepth = 20)
+                     ,control=list(adapt_delta=0.985,max_treedepth = 20)
 )
-saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gamma.rds")
+saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gammak8.rds")
 brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
 
 #summary information
@@ -323,3 +334,4 @@ ggplot(cond_inter_treatment_id |>
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black"))
+
