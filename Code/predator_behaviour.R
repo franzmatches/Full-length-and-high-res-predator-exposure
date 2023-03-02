@@ -24,6 +24,10 @@ id_predators <- rbind(did_id_data, hom_id_data) %>%
   mutate(Species = case_when(Species == "DIDnas" ~ "Didinium",
                              Species == "HOMver" ~ "Homalozoon"))
 
+
+wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Didinium"))
+wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Homalozoon"))
+
 ggplot(data = subset(id_predators,Species != "PARcau"), 
        aes(x=treatment,y=mean_speed,fill=treatment)) +
   geom_boxplot()+
