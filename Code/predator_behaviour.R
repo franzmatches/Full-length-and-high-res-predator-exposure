@@ -32,7 +32,8 @@ ggplot(data = subset(id_predators,Species != "PARcau"),
   xlab("Temperature treatment")+
   ylab("Mean speed (mm/s)")+
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
-  ggpubr::stat_compare_means(label = "p.signif",symnum.args = list(cutpoints = c(0, 0.001, 0.01, 0.05, Inf), symbols = c( "***", "**", "*", "ns")))+
+  ggpubr::stat_compare_means( method = "wilcox.test",
+                             symnum.args = list(cutpoints = c(0, 0.001, 0.01, 0.05, Inf), symbols = c( "***", "**", "*", "ns")))+
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text.y.right = element_text(angle = 0),
