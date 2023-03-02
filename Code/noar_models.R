@@ -131,7 +131,7 @@ ggplot(global_dat_id |>
 
 
 
-cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibull,
+cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibullk8,
                                                      effects = "time_point",
                                                      #method = "posterior_predict",
                                                      method = "posterior_epred",
@@ -194,7 +194,7 @@ brms_id_gamma <- brm(bf(mean_speed ~ s(time_point,k=8) +
                      warmup = 2000, 
                      refresh = 50,
                      silent = 0
-                     ,control=list(adapt_delta=0.985,max_treedepth = 20)
+                     ,control=list(adapt_delta=0.99,max_treedepth = 20)
 )
 saveRDS(brms_id_gamma, file = "Results/brms_id_noar_gammak8.rds")
 brms_id_gamma <- readRDS( file = "Results/brms_id_noar_gamma.rds")
@@ -301,6 +301,7 @@ brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator
 
 
 saveRDS(brms_lm_id, file = "Results/brms_lm_id_noar.rds")
+brms_lm_id <- readRDS(file = "Results/brms_lm_id_noar.rds")
 
 cond_inter_treatment_id<- conditional_effects(brms_lm_id,effects = "mean_length_um:treatment",
                                               conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
@@ -324,6 +325,42 @@ ggplot(cond_inter_treatment_id |>
   facet_grid(cond__~predator_treatment, scales = "fixed") +
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+  xlab("Mean length (\u03BCm)")+
+  ylab("Mean width (\u03BCm)")+
+  theme_classic()+
+  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        strip.text.x = element_text(face = "bold.italic"),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(fill = NA, colour = "black"))
+
+
+cond_inter_treatment_id_pred <- conditional_effects(brms_lm_id,effects = "mean_length_um:predator_treatment",
+                                                #method = "posterior_predict",
+                                              conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
+                                                                                  treatment =  c(15,25))))[[1]]|>
+  mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
+         effect = "interaction")
+
+
+ggplot(cond_inter_treatment_id_pred |>
+         mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
+         mutate(treatment = paste0(treatment,"\u00B0C")) |>
+         mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+  geom_point(data = id_data |>
+               ungroup()|>
+               dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) |>
+               mutate(treatment = paste0(treatment,"\u00B0C")) |>
+               filter(time_point %in% c(0,8,16,24)) |>
+               mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h"))),
+             aes(x=mean_length_um,y=mean_width_um,col=as.factor(predator_treatment)), alpha = 0.4)+
+  geom_line(aes(x = effect1__, y=estimate__,col=as.factor(predator_treatment))) +
+  geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(predator_treatment)),alpha=0.5)+
+  facet_grid(cond__~treatment, scales = "fixed") +
+  scale_fill_manual(name = "Treatment",values = c("#D9CD8D","#D9B8CF","#5B8B8C")) + 
+  scale_color_manual(name = "Treatment",values = c("#D9CD8D","#D9B8CF","#5B8B8C")) + 
   xlab("Mean length (\u03BCm)")+
   ylab("Mean width (\u03BCm)")+
   theme_classic()+
