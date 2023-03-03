@@ -27,11 +27,11 @@ id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
     treatment = factor(treatment, levels = c(15,25)),
     treat_inter = as.factor(interaction(treatment,predator_treatment)))
 
-id_data<-id_data_with_predators %>% filter(Species == "PARcau") |>
-  group_by(ID,treat_inter,replicate,time_point) |>
+id_data<-id_data_with_predators %>% filter(Species == "PARcau") %>%
+  group_by(ID,treat_inter,replicate,time_point) %>%
   slice_head()
 
-ggplot(id_data|> group_by(treat_inter,replicate,time_point) |> 
+ggplot(id_data%>% group_by(treat_inter,replicate,time_point) %>% 
          summarise(num_IDs = max(length(unique(ID)))),
        aes(x=time_point,num_IDs)) +
   geom_point()+
@@ -86,29 +86,42 @@ pp_check(brms_id_weibullk5,type = "hist")
 pp_check(brms_id_weibullk8,type = "hist")
 
 #summary information
-loo::loo(brms_id_weibull) #analogous to AIC 21682.0
-pp_check(brms_id_weibull) #predicted values vs observed (density plot)
-pp_check(brms_id_weibull,type = "hist") #predicted values vs observed (histogram)
-summary(brms_id_weibull) #full summary table
-bayestestR::describe_posterior(brms_id_weibull, ci = 0.95, test="none") #streamlined summary table (for supplementary)
+loo::loo(brms_id_weibullk8) #analogous to AIC 21682.0
+pp_check(brms_id_weibullk8) #predicted values vs observed (density plot)
+pp_check(brms_id_weibullk8,type = "hist") #predicted values vs observed (histogram)
+summary(brms_id_weibullk8) #full summary table
+speed_summary <- bayestestR::describe_posterior(brms_id_weibullk8, ci = 0.95, test="none") #streamlined summary table (for supplementary)
+speed_summary_coef <- fixef(brms_id_weibullk8)
+
+speed_model_summary_table <- data.frame(rbind(summary(brms_id_weibullk8)$random[[1]],
+                       summary(brms_id_weibullk8)$fixed,
+                       summary(brms_id_weibullk8)$splines)) %>%
+  tibble::rownames_to_column("Parameter") %>%
+  dplyr::mutate(dplyr::across(Estimate:Tail_ESS,~signif(.,digit=3))) %>%
+  dplyr::add_row(Parameter = "random",.before = 1) %>%
+  dplyr::add_row(Parameter = "fixed",.before = 3) %>%
+  dplyr::add_row(Parameter = "splines",.before = 22) 
+           
+readr::write_csv(speed_model_summary_table,
+          file = "Results/figures/speed_model_summary_table.csv")
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
-                       time_point = seq(0,24,by=1)) |>
+                       time_point = seq(0,24,by=1)) %>%
   mutate(treat_inter = interaction(treatment,predator_treatment))
 
 global_dat_id <- cbind(new_dat,
                        predict(brms_id_weibull,newdata = new_dat, re_formula =NA))
 
 
-ggplot(global_dat_id |>
-         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+ggplot(global_dat_id %>%
+         mutate(treatment = paste0(treatment,"\u00B0C"))%>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
-  geom_point(data = id_data |>
-               ungroup()|>
-               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               mutate(treatment = paste0(treatment,"\u00B0C"))%>%
                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
              aes(x = time_point, y=mean_speed),col="black", alpha = 0.3, shape = 21)+
   geom_line(aes(x = time_point, y=Estimate),col="black",linewidth=1.5) +
@@ -137,15 +150,15 @@ cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibullk8,
                                                      method = "posterior_epred",
                                                      conditions = (data.frame(expand.grid(treatment = c(15,25),
                                                                                           #time_point = seq(from = 0,to=24,by=1),
-                                                                                          predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                                                          predator_treatment =  c("prey","didinium","homalozoon"))) %>%
                                                                      mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
-
-ggplot(cond_speed_treatment_id |>
-         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+ggsave("Results/figures/figure2.png",
+ggplot(cond_speed_treatment_id %>%
+         mutate(treatment = paste0(treatment,"\u00B0C"))%>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
-  geom_point(data = id_data |>
-               ungroup()|>
-               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               mutate(treatment = paste0(treatment,"\u00B0C"))%>%
                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
              aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
   geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
@@ -162,7 +175,8 @@ ggplot(cond_speed_treatment_id |>
         strip.text.x = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+        panel.border = element_rect(fill = NA, colour = "black")),
+width=8,height =6,dpi=300)
 
 ###################################################################################
 # Gamma speed model
@@ -208,21 +222,21 @@ bayestestR::describe_posterior(brms_id_gamma, ci = 0.95, test="none") #streamlin
 
 new_dat <- expand.grid(treatment = c(15,25),
                        predator_treatment = c("prey","didinium","homalozoon"),
-                       time_point = seq(0,24,by=1)) |>
+                       time_point = seq(0,24,by=1)) %>%
   mutate(treat_inter = interaction(treatment,predator_treatment))
 
 global_dat_id <- cbind(new_dat,
                        predict(brms_id_gamma,newdata = new_dat, re_formula =NA))
 
 
-ggplot(global_dat_id |>
-         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+ggplot(global_dat_id %>%
+         mutate(treatment = paste0(treatment,"\u00B0C"))%>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
   #geom_ribbon(aes(x = time_point,ymin = Q2.5, ymax =  Q97.5,fill=as.factor(predator_treatment)),alpha=0.5)+
   #geom_line(aes(x = time_point, y=Estimate,col=as.factor(predator_treatment))) +
-  geom_point(data = id_data |>
-               ungroup()|>
-               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               mutate(treatment = paste0(treatment,"\u00B0C"))%>%
                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
              aes(x = time_point, y=mean_speed),col="black", alpha = 0.3, shape = 21)+
   geom_line(aes(x = time_point, y=Estimate),col="black",linewidth=1.5) +
@@ -251,15 +265,15 @@ cond_speed_treatment_id <- conditional_effects(brms_id_gamma,
                                                method = "posterior_epred",
                                                conditions = (data.frame(expand.grid(treatment = c(15,25),
                                                                                     #time_point = seq(from = 0,to=24,by=1),
-                                                                                    predator_treatment =  c("prey","didinium","homalozoon"))) |>
+                                                                                    predator_treatment =  c("prey","didinium","homalozoon"))) %>%
                                                                mutate(treat_inter = interaction(treatment,predator_treatment))))[[1]]
 
-ggplot(cond_speed_treatment_id |>
-         mutate(treatment = paste0(treatment,"\u00B0C"))|>
+ggplot(cond_speed_treatment_id %>%
+         mutate(treatment = paste0(treatment,"\u00B0C"))%>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
-  geom_point(data = id_data |>
-               ungroup()|>
-               mutate(treatment = paste0(treatment,"\u00B0C"))|>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               mutate(treatment = paste0(treatment,"\u00B0C"))%>%
                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
              aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
   geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
@@ -303,21 +317,43 @@ brms_lm_id<- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*predator
 saveRDS(brms_lm_id, file = "Results/brms_lm_id_noar.rds")
 brms_lm_id <- readRDS(file = "Results/brms_lm_id_noar.rds")
 
+#summary info
+loo::loo(brms_lm_id) #analogous to AIC 21682.0
+pp_check(brms_lm_id) #predicted values vs observed (density plot)
+pp_check(brms_lm_id,type = "hist") #predicted values vs observed (histogram)
+summary(brms_lm_id) #full summary table
+shape_summary <- bayestestR::describe_posterior(brms_lm_id, ci = 0.95, test="none") #streamlined summary table (for supplementary)
+shape_summary_coef <- fixef(brms_lm_id)
+
+
+
+shape_model_summary_table <- data.frame(rbind(summary(brms_lm_id)$random[[1]],
+                                              summary(brms_lm_id)$fixed,
+                                              summary(brms_lm_id)$splines)) %>%
+  tibble::rownames_to_column("Parameter") %>%
+  dplyr::mutate(dplyr::across(Estimate:Tail_ESS,~signif(.,digit=3))) %>%
+  dplyr::add_row(Parameter = "random",.before = 1) %>%
+  dplyr::add_row(Parameter = "fixed",.before = 3)
+
+readr::write_csv(shape_model_summary_table,
+                 file = "Results/figures/shape_model_summary_table.csv")
+
 cond_inter_treatment_id<- conditional_effects(brms_lm_id,effects = "mean_length_um:treatment",
                                               conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
-                                                                                  predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]|>
+                                                                                  predator_treatment =  c("prey","didinium","homalozoon"))))[[1]]%>%
   mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
          effect = "interaction")
 
-ggplot(cond_inter_treatment_id |>
-         mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
-         mutate(effect2__ = paste0(effect2__,"\u00B0C")) |>
+ggsave("Results/figures/figure3.png",
+       ggplot(cond_inter_treatment_id %>%
+         mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))%>%
+         mutate(effect2__ = paste0(effect2__,"\u00B0C")) %>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
-  geom_point(data = id_data |>
-               ungroup()|>
-               dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) |>
-               mutate(effect2__ = paste0(treatment,"\u00B0C")) |>
-               filter(time_point %in% c(0,8,16,24)) |>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) %>%
+               mutate(effect2__ = paste0(treatment,"\u00B0C")) %>%
+               filter(time_point %in% c(0,8,16,24)) %>%
                mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h"))),
              aes(x=mean_length_um,y=mean_width_um,col=as.factor(effect2__)), alpha = 0.4)+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
@@ -325,8 +361,8 @@ ggplot(cond_inter_treatment_id |>
   facet_grid(cond__~predator_treatment, scales = "fixed") +
   scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
   scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
-  xlab("Mean length (\u03BCm)")+
-  ylab("Mean width (\u03BCm)")+
+  xlab(expression(paste("Mean length (", mu,"m)")))+
+  ylab(expression(paste("Mean width (", mu,"m)")))+ 
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text = element_text(face = "bold"),
@@ -334,26 +370,28 @@ ggplot(cond_inter_treatment_id |>
         strip.text.x = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+        panel.border = element_rect(fill = NA, colour = "black")),
+  width=5,height =5,dpi=300)
 
 
 cond_inter_treatment_id_pred <- conditional_effects(brms_lm_id,effects = "mean_length_um:predator_treatment",
                                                 #method = "posterior_predict",
                                               conditions = data.frame(expand.grid(time_point = seq(0,24,by=8),
-                                                                                  treatment =  c(15,25))))[[1]]|>
+                                                                                  treatment =  c(15,25))))[[1]]%>%
   mutate(cond__ = paste(time_point,predator_treatment,sep="_"),
          effect = "interaction")
 
 
-ggplot(cond_inter_treatment_id_pred |>
-         mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))|>
-         mutate(treatment = paste0(treatment,"\u00B0C")) |>
+ggsave("Results/figures/figure3_alt.png",
+ggplot(cond_inter_treatment_id_pred %>%
+         mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))%>%
+         mutate(treatment = paste0(treatment,"\u00B0C")) %>%
          mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
-  geom_point(data = id_data |>
-               ungroup()|>
-               dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) |>
-               mutate(treatment = paste0(treatment,"\u00B0C")) |>
-               filter(time_point %in% c(0,8,16,24)) |>
+  geom_point(data = id_data %>%
+               ungroup()%>%
+               dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) %>%
+               mutate(treatment = paste0(treatment,"\u00B0C")) %>%
+               filter(time_point %in% c(0,8,16,24)) %>%
                mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h"))),
              aes(x=mean_length_um,y=mean_width_um,col=as.factor(predator_treatment)), alpha = 0.4)+
   geom_line(aes(x = effect1__, y=estimate__,col=as.factor(predator_treatment))) +
@@ -361,8 +399,8 @@ ggplot(cond_inter_treatment_id_pred |>
   facet_grid(cond__~treatment, scales = "fixed") +
   scale_fill_manual(name = "Treatment",values = c("#D9CD8D","#D9B8CF","#5B8B8C")) + 
   scale_color_manual(name = "Treatment",values = c("#D9CD8D","#D9B8CF","#5B8B8C")) + 
-  xlab("Mean length (\u03BCm)")+
-  ylab("Mean width (\u03BCm)")+
+  xlab(expression(paste("Mean length (", mu,"m)")))+
+  ylab(expression(paste("Mean width (", mu,"m)")))+ 
   theme_classic()+
   theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
         strip.text = element_text(face = "bold"),
@@ -370,5 +408,7 @@ ggplot(cond_inter_treatment_id_pred |>
         strip.text.x = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+        panel.border = element_rect(fill = NA, colour = "black")),
+width=5,height =5,dpi=300)
+
 
