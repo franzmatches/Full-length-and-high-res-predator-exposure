@@ -34,5 +34,4 @@ readr::write_csv(speed_model_summary_table,
                  file = "Results/figures/supplementary_figures/speed_model_summary_table.csv")
 
 readr::write_csv(shape_model_summary_table,
-                 file = "Results/figures/shape_model_summary_table.csv")
-
+                 file = "Results/figures/supplementary_figures/shape_model_summary_table.csv")
