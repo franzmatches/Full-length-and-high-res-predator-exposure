@@ -1,7 +1,10 @@
 ########################################################################################################################
 # Supplementary Tables #
 ########################################################################################################################
+
 require(tidyverse)
+
+#load models
 brms_id_weibullk8 <- readRDS(file = "Results/brms_id_noar_weibullk8.rds")
 brms_lm_id <- readRDS(file = "Results/brms_lm_id_noar.rds")
 
