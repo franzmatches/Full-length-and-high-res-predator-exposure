@@ -2,6 +2,7 @@ require(brms)
 require(Matrix)
 require(tidyverse)
 require(camcorder)
+require(gifski)
 
 ################################################################################################
 ## Average Model
@@ -78,16 +79,23 @@ for(i in unique(cond_inter_treatment2$time_point)){
   )
 }
 
-camcorder::gg_playback(
-  name = file.path("Results/abstract_gif","gif1.gif"),
-  first_image_duration = 5,
-  last_image_duration = 5,
-  frame_duration = 0.25,
-  last_as_first = FALSE,
-  background = "none"
+camcorder::gg_stop_recording()
+
+imgs <- list.files("Results/abstract_gif/gif1", full.names = TRUE)
+
+imgs <- c(
+  rep(imgs[1], times = 5),
+  imgs[-c(1, length(imgs))],
+  rep(imgs[length(imgs)], times = 5)
 )
 
-camcorder::gg_stop_recording()
+gifski::gifski(
+  png_files = imgs,
+  gif_file = "Results/abstract_gif/gif1.gif",
+  delay = 0.25,
+  width = 6*600,
+  height = 2.5*600,
+)
 
 ################################################################################################
 ## All IDs Model
@@ -136,9 +144,9 @@ camcorder::gg_record(
   dir = file.path("Results/abstract_gif", "gif_noar"), # where to save the recording
   device = "png", # device to use to save images
   width = 5,      # width of saved image
-  height = 2,     # height of saved image
+  height = 2.5,     # height of saved image
   units = "in",   # units for width and height
-  dpi = 300       # dpi to use when saving image
+  dpi = 144       # dpi to use when saving image
 )
 
 for(i in 0:24){
@@ -173,15 +181,24 @@ for(i in 0:24){
             axis.line = element_line(colour = "black"),
             panel.border = element_rect(fill = NA, colour = "black"))
   )
+  #gg_resize_film(height = 2, width = 6, units = "in", dpi = 144)
+  
 }
 
-camcorder::gg_playback(
-  name = file.path("Results/abstract_gif","gif_noar.gif"),
-  first_image_duration = 5,
-  last_image_duration = 5,
-  frame_duration = 0.25,
-  last_as_first = FALSE,
-  background = "none"
-)
-
 camcorder::gg_stop_recording()
+
+imgs <- list.files("Results/abstract_gif/gif_noar", full.names = TRUE)
+
+imgs <- c(
+  rep(imgs[1], times = 5),
+  imgs[-c(1, length(imgs))],
+  rep(imgs[length(imgs)], times = 5)
+)
+  
+gifski::gifski(
+  png_files = imgs,
+  gif_file = "Results/abstract_gif/gif_noar.gif",
+  delay = 0.25,
+  width = 6*600,
+  height = 2.5*600,
+)
