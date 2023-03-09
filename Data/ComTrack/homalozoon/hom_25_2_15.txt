@@ -1,0 +1,2 @@
+ Frame  ID  CentroidX  CentroidY  Width  Length  Area  Angle  Box_TLX  Box_TLY  Box_BRX  Box_BRY  Box_W  Box_H  rBox_TLX  rBox_TLY  rBox_TRX  rBox_TRY  rBox_BRX  rBox_BRY  rBox_BLX  rBox_BLY  lBox_TLX  lBox_TLY  lBox_BRX  lBox_BRY  Label   HOMver   NONpro   PARcau
+   135   0       2122       1291  3.162   8.544  17.0 71.565     2119     1289     2128     1295      9      6      2118      1291      2126      1288      2127      1291      2119      1294      2094      1264      2153      1320 PARcau 0.047635 0.095648 0.856717
