@@ -360,6 +360,8 @@ brms_group <- brm(bf(mean_speed ~ s(time_point) +
              cores = 4, 
              iter = 10000, 
              warmup = 2000, 
+             backend = "cmdstanr", 
+             #threads = threading(2),
              silent = 0,
              control=list(adapt_delta=0.975,max_treedepth = 20))
 
@@ -505,6 +507,7 @@ brms_lm_grouped <- brm(bf(mean_width_um ~ mean_length_um*time_point*treatment*pr
                cores = 4, 
                iter = 10000, 
                warmup = 2000, 
+               backend = "cmdstanr", 
                silent = 0,
                control=list(adapt_delta=0.975,max_treedepth = 20))
 
