@@ -28,21 +28,24 @@ id_predators <- rbind(did_id_data, hom_id_data) %>%
 wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Didinium"))
 wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Homalozoon"))
 
-ggplot(data = subset(id_predators,Species != "PARcau"), 
+ggsave(filename = "Results/figures/supplementary_figures/figure_S5.png",
+       ggplot(data = subset(id_predators,Species != "PARcau") %>%
+                mutate(treatment = paste0(treatment,"\u00B0C")), 
        aes(x=treatment,y=mean_speed,fill=treatment)) +
-  geom_boxplot()+
-  scale_x_discrete(labels = paste0(unique(id_predators$treatment),"\u00B0C"))+
-  facet_grid(~Species)+
-  xlab("Temperature treatment")+
-  ylab("Mean speed (mm/s)")+
-  scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
-  ggpubr::stat_compare_means( method = "wilcox.test",
+         geom_boxplot()+
+         scale_x_discrete(labels = paste0(unique(id_predators$treatment),"\u00B0C"))+
+         facet_grid(~Species)+
+         xlab("Temperature treatment")+
+         ylab("Mean speed (mm/s)")+
+         scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+         ggpubr::stat_compare_means( method = "wilcox.test",
                              symnum.args = list(cutpoints = c(0, 0.001, 0.01, 0.05, Inf), symbols = c( "***", "**", "*", "ns")))+
-  theme_classic()+
-  theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
-        strip.text.y.right = element_text(angle = 0),
-        strip.text.x = element_text(face = "bold.italic"),
-        strip.text = element_text(face = "bold"),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(fill = NA, colour = "black"))
+         theme_classic()+
+         theme(strip.background = element_rect(colour = "black", fill = "white", linetype = "blank"),
+               strip.text.y.right = element_text(angle = 0),
+               strip.text.x = element_text(face = "bold.italic"),
+               strip.text = element_text(face = "bold"),
+               panel.background = element_blank(),
+               axis.line = element_line(colour = "black"),
+               panel.border = element_rect(fill = NA, colour = "black")),
+       width = 5.5, height = 4)
