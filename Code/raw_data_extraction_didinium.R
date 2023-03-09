@@ -2,24 +2,12 @@ rm(list=ls())
 ##################################################################################################
 ####################### Extracting data from video output#########################################
 ##################################################################################################
-# ---- 1. File directory ----
+# ---- 1. Packages ----
 
-# put the Code (.R) file where data sheets of the videos ".txt" are; there will be the working directory
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
-# ---- 2. Packages ----
-require(ggplot2) 
-require(ggdist)
-require(ggpubr)
-require(ggrepel)
-require(dplyr) 
-require(vroom)
+require(tidyverse) 
 require(data.table)
-require(ggh4x)
-require(plotrix)
-library(tidyr)
-# ---- 4. Data import and handling----
+
+# ---- 2. Data import and handling----
 
 #set the video resolution to re-scale from pixels to mm 
 #pixels
@@ -42,7 +30,7 @@ first_sp<-"DIDnas"
 last_sp<-"PARcau"
 
 #create a list with all the file names (each object that ends in ".txt" in your folder)
-files <- fs::dir_ls(glob = "*.txt")
+files <- fs::dir_ls(path = "Data/ComTrack/didinium", glob = "*.txt")
 
 #with rbind we will paste together the resulting data frame that the following code (the "function") creates for each ".txt" file (x)
 
@@ -97,23 +85,6 @@ summary_data_final<-rbindlist(lapply(as.list(files), function(x){
     drop_patterns <- c("Box", "Label", "Angle")  #all the variables we want to discard
     
     sorted_data <- sorted_data %>% select(!contains(drop_patterns)) #create clean data without the drop patterns
-    
-    #identifying the gap in the ID detection and taking it into account creating a new ID variable
-    
-    # # #create a list with each sub dataframe for each ID and apply the function
-    # gap_ID <- rbindlist(lapply(split(sorted_data, sorted_data$ID), function(y){
-    #   #y<- split(sorted_data, sorted_data$ID)[[1]]
-    #   counter <- 0
-    #   y$Diff <- 0 #add a "Diff" column to the sub-dataframe
-    #   for(i in 2:nrow(y)){
-    #     if(y$Frame[i]-y$Frame[i-1] == 1){ #check if the difference between subsequent frame number in the rows is 1
-    #       y$Diff[i] = counter}else{ #if is not add 1 to the counter
-    #         counter<-counter+1
-    #         y$Diff[i] = counter
-    #       }
-    #   }
-    #   return(y)
-    # }))
     
     # #create a new dataframe that has new ID based on if a particle has disappeared and then reappeared in the video
     # filtered_gap_ID <- gap_ID %>% group_by(ID, Diff) %>% mutate(ID = cur_group_id()) %>% ungroup
@@ -187,7 +158,9 @@ summary_data_final<-rbindlist(lapply(as.list(files), function(x){
   
 }),fill = T)
 
-######### Plotting to check species abundances, body size and speed extracted from video ############################
+# ---- 3. Plotting and final cleaning ----
+
+#Plotting to check species abundances, body size and speed extracted from video ############################
 #put dataframe in tibble version (more ggplot friendly)
 summary_data_final<-as_tibble(summary_data_final) %>%
   group_by(time_point,
@@ -195,9 +168,9 @@ summary_data_final<-as_tibble(summary_data_final) %>%
            replicate,
            Species) %>% 
   mutate(time_point = as.numeric(time_point)) %>% #time point to be treated as a number
-filter(Species != 'NONpro',
+  filter(Species != 'NONpro',
        ) %>% #remove non protist particles 
-ungroup () # %>%
+  ungroup() 
 
 #Plot
 ggplot(data = summary_data_final %>% group_by(time_point, treatment, replicate, Species) %>% 
@@ -250,10 +223,6 @@ ggplot(data = data_didinium_clean %>% group_by(time_point, treatment, replicate,
   theme_bw()
 max(data_didinium_clean$ID)
 
-#save
-write.csv(data_didinium_clean, "didinium_data_IDs_clean.csv", row.names = FALSE)
+# ---- 4. Write out data----
 
-#reaload the data to save it in a RData file
-data_didinium_clean<-read.csv("didinium_data_IDs_clean.csv")
-
-saveRDS(data_didinium_clean, file = "didinium_data_IDs_clean.RDS")
+saveRDS(data_didinium_clean, file = "Data/didinium_data_IDs_clean.RDS")

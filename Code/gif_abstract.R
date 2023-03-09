@@ -49,8 +49,8 @@ unlink("Results/abstract_gif/gif1", recursive = TRUE) # remove old version of gi
 camcorder::gg_record(
   dir = file.path("Results/abstract_gif", "gif1"), # where to save the recording
   device = "png", # device to use to save images
-  width = 5,      # width of saved image
-  height = 2,     # height of saved image
+  width = 7,      # width of saved image
+  height = 2.5,     # height of saved image
   units = "in",   # units for width and height
   dpi = 300       # dpi to use when saving image
 )
@@ -93,7 +93,7 @@ gifski::gifski(
   png_files = imgs,
   gif_file = "Results/abstract_gif/gif1.gif",
   delay = 0.25,
-  width = 6*600,
+  width = 7*600,
   height = 2.5*600,
 )
 
@@ -143,7 +143,7 @@ unlink("Results/abstract_gif/gif_noar", recursive = TRUE) # remove old version o
 camcorder::gg_record(
   dir = file.path("Results/abstract_gif", "gif_noar"), # where to save the recording
   device = "png", # device to use to save images
-  width = 5,      # width of saved image
+  width = 7,      # width of saved image
   height = 2.5,     # height of saved image
   units = "in",   # units for width and height
   dpi = 144       # dpi to use when saving image
@@ -199,6 +199,6 @@ gifski::gifski(
   png_files = imgs,
   gif_file = "Results/abstract_gif/gif_noar.gif",
   delay = 0.25,
-  width = 6*600,
+  width = 7*600,
   height = 2.5*600,
 )
