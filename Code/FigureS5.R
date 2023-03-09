@@ -1,5 +1,5 @@
 ################################################################
-# Predator Behaviour
+# Figure S5
 ################################################################
 
 did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RDS")
