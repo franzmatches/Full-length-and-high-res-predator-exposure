@@ -6,4 +6,4 @@
 
 [*Figure2.R*](Figure2.R), [*Figure3.R*](Figure3.R), [*FiguresS1_4.R*](FiguresS1_4.R), [*FigureS5.R*](FigureS5.R),[*TablesS1_2.R*](TablesS1_2.R)- generate the main figures available [here](https://github.com/franzmatches/Full-length-and-high-res-predator-exposure/tree/main/Results/figures), the [supplementary figures](https://github.com/franzmatches/Full-length-and-high-res-predator-exposure/tree/main/Results/figures/supplementary_figures), and supplementary tables [here](https://github.com/franzmatches/Full-length-and-high-res-predator-exposure/tree/main/Results/figures/supplementary_figures).
 
-[*gif_abstract.R*](gif_abstract.R) - generates gif form of [Figure 3](https://github.com/franzmatches/Full-length-and-high-res-predator-exposure/tree/main/Results/figures/figure_3.png).
+[*gif_abstract.R*](gif_abstract.R) - generates gif form of [Figure 3](https://github.com/franzmatches/Full-length-and-high-res-predator-exposure/tree/main/Results/figures/figure3.png).
