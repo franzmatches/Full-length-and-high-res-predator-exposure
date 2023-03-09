@@ -16,4 +16,3 @@ Generated data, code and results from Cerini F., O’Brien DA.,  Wolfe E., Besso
 ## Funding
 
 This project was supported by NERC grants awarded to CF Clements ([**NE/T006579/1**](https://gtr.ukri.org/project/C57870FC-7D15-455D-BEB4-0122A44D9C43) and [**NE/T003502/1**](https://gtr.ukri.org/projects?ref=NE%2FT003502%2F1)).
-
