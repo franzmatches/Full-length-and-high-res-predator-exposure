@@ -1,6 +1,6 @@
 # Predator_exposure_protists_exp
 
-Generated data, code and results from Cerini F., O’Brien DA.,  Wolfe E., Besson M. and Clements CF. 2023. Effects of temperature and predator presence on prey behaviour and morphology: high resolution data from protist microcosms.
+Generated data, code and results from Cerini F., O’Brien DA., Wolfe E., Besson M. and Clements CF. 2023. Interaction effects of temperature and predator presence on prey behaviour and morphology: high-resolution data from protist microcosms.
 
 ## Graphical abstract
 
