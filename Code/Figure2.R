@@ -12,6 +12,7 @@ brms_id_weibullk8 <- readRDS(file = "Results/brms_id_noar_weibullk8.rds")
 cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibullk8,
                                                      effects = "time_point",
                                                      method = "posterior_epred",
+                                                     prob = 0.99,
                                                      conditions = (
                                                        data.frame(
                                                          expand.grid(treatment = c(15,25),
@@ -31,11 +32,11 @@ ggsave("Results/figures/figure2.png",
                       mutate(treatment = paste0(treatment,"\u00B0C"))%>%
                       mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
                     aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
-         geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1.5) +
-         geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.3)+
+         geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.5)+
+         geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1) +
          facet_grid(treatment~predator_treatment, scales = "fixed")+
          scale_fill_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
-         scale_color_manual(name = "Treatment",values = c("#a2d7d8","#de5842")) + 
+         #scale_color_manual(name = "Treatment",values = c("#658687","#993C2E")) + 
          theme_classic()+
          xlab("Time (hours)")+
          ylab("Mean speed (mm/s)")+
