@@ -26,11 +26,11 @@ cond_speed_treatment_id <- brms::conditional_effects(brms_id_weibullk8,
 ggsave("Results/figures/figure2.png",
        ggplot(cond_speed_treatment_id %>%
                 mutate(treatment = paste0(treatment,"\u00B0C"))%>%
-                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))))+
          geom_point(data = id_data %>%
                       ungroup()%>%
                       mutate(treatment = paste0(treatment,"\u00B0C"))%>%
-                      mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))),
+                      mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))),
                     aes(x=time_point,y=mean_speed),col="black", alpha = 0.3, shape = 21)+
          geom_ribbon(aes(x = time_point,ymin = lower__, ymax =  upper__,fill=as.factor(treatment)),alpha=0.5)+
          geom_line(aes(x = effect1__, y=estimate__),col="black",linewidth=1) +

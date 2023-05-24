@@ -21,12 +21,12 @@ id_predators <- rbind(did_id_data, hom_id_data) %>%
     treat_inter = as.factor(interaction(treatment,predator_treatment))) %>%
   group_by(Species,treatment,predator_treatment,replicate,treat_inter,time_point) %>%
   summarise(across(c(max_abundance:mean_speed), ~mean(.x))) %>%
-  mutate(Species = case_when(Species == "DIDnas" ~ "Didinium",
-                             Species == "HOMver" ~ "Homalozoon"))
+  mutate(Species = case_when(Species == "DIDnas" ~ "D. nasutum",
+                             Species == "HOMver" ~ "H. vermiculare"))
 
 
-wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Didinium"))
-wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "Homalozoon"))
+wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "D. nasutum"))
+wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "H. vermiculare"))
 
 ggsave(filename = "Results/figures/supplementary_figures/figure_S5.png",
        ggplot(data = subset(id_predators,Species != "PARcau") %>%

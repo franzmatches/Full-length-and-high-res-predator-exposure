@@ -25,10 +25,10 @@ ggsave("Results/figures/figure3.png",
        ggplot(cond_inter_treatment_id %>%
                 mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h")))%>%
                 mutate(effect2__ = paste0(effect2__,"\u00B0C")) %>%
-                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+                mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))))+
          geom_point(data = id_data %>%
                       ungroup()%>%
-                      dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) %>%
+                      dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))) %>%
                       mutate(effect2__ = paste0(treatment,"\u00B0C")) %>%
                       filter(time_point %in% c(0,8,16,24)) %>%
                       mutate(cond__ = factor(paste0(time_point,"h"),levels = c("0h","8h","16h","24h"))),
