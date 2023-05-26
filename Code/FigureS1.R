@@ -47,6 +47,7 @@ ggplot()+
         strip.text = element_text(face = "bold"),
         strip.text.y.right = element_text(angle = 0),
         strip.text.x = element_text(face = "bold.italic"),
+        strip.text.y = element_text(face = "bold.italic"),
         panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(fill = NA, colour = "black")))
