@@ -1,5 +1,5 @@
 ################################################################
-# Figure S5
+# Figure S6
 ################################################################
 
 did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RDS")
@@ -28,7 +28,7 @@ id_predators <- rbind(did_id_data, hom_id_data) %>%
 wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "D. nasutum"))
 wilcox.test(mean_speed~treatment,data = subset(id_predators,Species == "H. vermiculare"))
 
-ggsave(filename = "Results/figures/supplementary_figures/figure_S5.png",
+ggsave(filename = "Results/figures/supplementary_figures/figure_S6.png",
        ggplot(data = subset(id_predators,Species != "PARcau") %>%
                 mutate(treatment = paste0(treatment,"\u00B0C")), 
        aes(x=treatment,y=mean_speed,fill=treatment)) +
