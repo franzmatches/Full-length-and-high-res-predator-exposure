@@ -15,10 +15,10 @@ prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RDS")
 
 #add predator treatment column to each then combine data frames
 did_id_data <- did_id_data %>%
-  mutate(predator_treatment = "didinium")
+  mutate(predator_treatment = "D. nasutum")
 
 hom_id_data <- hom_id_data %>%
-  mutate(predator_treatment = "homalozoon")
+  mutate(predator_treatment = "H. vermiculare")
 
 prey_id_data <- prey_id_data %>%
   mutate(predator_treatment = "prey")
@@ -59,7 +59,7 @@ for(i in unique(cond_inter_treatment2$time_point)){
   print(
     ggplot(cond_inter_treatment2 |>
            filter(time_point == i) |>
-      mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+      mutate(predator_treatment =factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))))+
     geom_line(aes(x = effect1__, y=estimate__,col=as.factor(effect2__))) +
     geom_ribbon(aes(x = effect1__,ymin = lower__, ymax =  upper__,fill=as.factor(effect2__)),alpha=0.5)+
     facet_grid(cond__~predator_treatment) +
@@ -153,7 +153,7 @@ for(i in 0:24){
   print(
     ggplot(cond_inter_treatment_noar |>
              filter(time_point == i) |>
-             mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))))+
+             mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","D. nasutum","H. vermiculare"))))+
       # geom_point(data = id_data |>
       #              ungroup()|>
       #              dplyr::mutate(predator_treatment = factor(predator_treatment,labels =  c("Control","Didinium","Homalozoon"))) |>

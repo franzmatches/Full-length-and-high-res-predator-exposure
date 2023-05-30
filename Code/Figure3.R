@@ -5,6 +5,33 @@ require(brms)
 require(tidyverse)
 brms_lm_id <- readRDS(file = "Results/brms_lm_id_noar.rds")
 
+did_id_data <- readRDS(file = "Data/didinium_data_IDs_clean.RDS")
+hom_id_data <- readRDS(file = "Data/homalozoon_data_IDs_clean.RDS")
+prey_id_data <- readRDS(file = "Data/prey_data_IDs_clean.RDS")
+
+#add predator treatment column to each then combine data frames
+did_id_data <- did_id_data %>%
+  mutate(predator_treatment = "didinium")
+
+hom_id_data <- hom_id_data %>%
+  mutate(predator_treatment = "homalozoon")
+
+prey_id_data <- prey_id_data %>%
+  mutate(predator_treatment = "prey")
+
+#combine the data frames
+id_data_with_predators <- rbind(did_id_data, hom_id_data, prey_id_data) %>%
+  #set prey as the first factor for data analysis
+  mutate(predator_treatment = factor(predator_treatment, levels = c("prey", "didinium", "homalozoon")))%>%
+  mutate(
+    # mean_speed_norm = predict(bestNormalize::bestNormalize(mean_speed)), we dont need to normalize
+    treatment = factor(treatment, levels = c(15,25)),
+    treat_inter = as.factor(interaction(treatment,predator_treatment)))
+
+id_data<-id_data_with_predators %>% filter(Species == "PARcau") %>%
+  group_by(ID,treat_inter,replicate,time_point) %>%
+  slice_head()
+
 ############ 
 #Extract conditional effects
 ############ 
