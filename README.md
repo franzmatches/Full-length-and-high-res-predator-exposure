@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7801998.svg)](https://doi.org/10.5281/zenodo.7801998)
 
-Generated data, code and results from Cerini F., O’Brien DA., Wolfe E., Besson M. and Clements CF. 2023. Phenotypic response to different predator strategies can be mediated by temperature: high-resolution data from protist microcosms.
+Generated data, code and results from Cerini F., O’Brien DA., Wolfe E., Besson M. and Clements CF. 2023. Phenotypic response to different predator strategies can be mediated by temperature
 
 ## Graphical abstract
 
